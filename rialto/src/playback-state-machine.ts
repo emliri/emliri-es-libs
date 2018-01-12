@@ -1,219 +1,220 @@
-import EventEmitter from 'eventemitter3';
+import {EventEmitter} from 'eventemitter3'
 
-export default class PlaybackStateMachine extends EventEmitter {
+import {MediaElement} from './media-element-observer'
 
-	static get Events() {
-		return {
-			STATE_TRANSITION: 'state-transition',
-			FAILURE: 'failure'
-		};
-	}
+export enum PlaybackStateMachineEvents {
+  STATE_TRANSITION = 'state-transition',
+  FAILURE = 'failure'
+}
 
-	static get EventReasons() {
-		return {
-			MEDIA_ERROR: 'media-error',
-			MEDIA_RECOVER: 'media-recover',
-			MEDIA_ENGINE_INIT: 'media-engine-init',
-			MEDIA_LOADING_PROGRESS: 'media-loading-progress',
-			MEDIA_CLOCK_UPDATE: 'media-clock-update',
-			MEDIA_DURATION_CHANGE: 'media-duration-change',
-			MEDIA_AUTO_PLAY: 'media-autoplay',
-			MEDIA_MANUAL_PLAY: 'media-manual-play',
-			MEDIA_PAUSE: 'media-pause',
-			MEDIA_BUFFER_UNDERRUN: 'media-buffer-underrun',
-			MEDIA_SEEK: 'media-seek',
-			MEDIA_END: 'media-end',
-			STATE_TRANSITION_FAIL: 'state-transition-fail'
-		};
-	}
+export enum PlaybackStateMachineTransitionReasons {
+  MEDIA_ERROR = 'media-error',
+  MEDIA_RECOVER = 'media-recover',
+  MEDIA_ENGINE_INIT = 'media-engine-init',
+  MEDIA_LOADING_PROGRESS = 'media-loading-progress',
+  MEDIA_CLOCK_UPDATE = 'media-clock-update',
+  MEDIA_DURATION_CHANGE = 'media-duration-change',
+  MEDIA_AUTO_PLAY = 'media-autoplay',
+  MEDIA_MANUAL_PLAY = 'media-manual-play',
+  MEDIA_PAUSE = 'media-pause',
+  MEDIA_BUFFER_UNDERRUN = 'media-buffer-underrun',
+  MEDIA_SEEK = 'media-seek',
+  MEDIA_END = 'media-end',
+  STATE_TRANSITION_FAIL = 'state-transition-fail'
+}
 
-	static get States() {
-		return {
-			NULL: 'null',
-			READY: 'ready',
-			METADATA_LOADING: 'metadata-loading',
-			PAUSED: 'paused',
-			PLAYING: 'playing',
-			ENDED: 'ended',			
-			ERROR: 'error'
-		};
-	}
+export enum PlaybackStates {
+  NULL = 'null',
+  READY = 'ready',
+  METADATA_LOADING = 'metadata-loading',
+  PAUSED = 'paused',
+  PLAYING = 'playing',
+  ENDED = 'ended',
+  ERROR = 'error'
+}
 
-	static get Substates() {
-		return {
-			DEFAULT: 'default',
-			FIRST_BUFFERING: 'first-buffering',
-			REBUFFERING: 'rebuffering',
-			SEEKING: 'seeking'
-		}
-	}			
+export enum PlaybackSubStates {
+  DEFAULT = 'default',
+  FIRST_BUFFERING = 'first-buffering',
+  REBUFFERING = 'rebuffering',
+  SEEKING = 'seeking'
+}
 
-	static get Transitions() {
-		const States = PlaybackStateMachine.States;
-		const EventReasons = PlaybackStateMachine.EventReasons;
-		return [
-			[States.NULL, States.READY, EventReasons.MEDIA_ENGINE_INIT],
-			[States.NULL, States.READY, EventReasons.MEDIA_MANUAL_PLAY],
+// local aliases :)
+const States = PlaybackStates
+const EventReasons = PlaybackStateMachineTransitionReasons
 
-			[States.READY, States.METADATA_LOADING, EventReasons.MEDIA_BUFFER_UNDERRUN],
-			[States.READY, States.METADATA_LOADING, EventReasons.MEDIA_LOADING_PROGRESS],
+export const PlaybackStateMachineTransitions: PlaybackStateTransition[] = [
+  [States.NULL, States.READY, EventReasons.MEDIA_ENGINE_INIT],
+  [States.NULL, States.READY, EventReasons.MEDIA_MANUAL_PLAY],
 
-			[States.METADATA_LOADING, States.PAUSED, EventReasons.MEDIA_DURATION_CHANGE],
+  [States.READY, States.METADATA_LOADING, EventReasons.MEDIA_BUFFER_UNDERRUN],
+  [States.READY, States.METADATA_LOADING, EventReasons.MEDIA_LOADING_PROGRESS],
 
-			[States.METADATA_LOADING, States.ERROR, EventReasons.MEDIA_ERROR],
+  [States.METADATA_LOADING, States.PAUSED, EventReasons.MEDIA_DURATION_CHANGE],
 
-			[States.PAUSED, States.PAUSED, EventReasons.MEDIA_AUTO_PLAY],
-			[States.PAUSED, States.PAUSED, EventReasons.MEDIA_MANUAL_PLAY],
-			[States.PAUSED, States.PAUSED, EventReasons.MEDIA_SEEK],
-			[States.PAUSED, States.PAUSED, EventReasons.MEDIA_BUFFER_UNDERRUN],
-			[States.PAUSED, States.PAUSED, EventReasons.MEDIA_LOADING_PROGRESS],
+  [States.METADATA_LOADING, States.ERROR, EventReasons.MEDIA_ERROR],
 
-			[States.PAUSED, States.PLAYING, EventReasons.MEDIA_CLOCK_UPDATE],
+  [States.PAUSED, States.PAUSED, EventReasons.MEDIA_AUTO_PLAY],
+  [States.PAUSED, States.PAUSED, EventReasons.MEDIA_MANUAL_PLAY],
+  [States.PAUSED, States.PAUSED, EventReasons.MEDIA_SEEK],
+  [States.PAUSED, States.PAUSED, EventReasons.MEDIA_BUFFER_UNDERRUN],
+  [States.PAUSED, States.PAUSED, EventReasons.MEDIA_LOADING_PROGRESS],
 
-			[States.PLAYING, States.PLAYING, EventReasons.MEDIA_CLOCK_UPDATE],
+  [States.PAUSED, States.PLAYING, EventReasons.MEDIA_CLOCK_UPDATE],
 
-			[States.PLAYING, States.PAUSED, EventReasons.MEDIA_PAUSE],
-			[States.PLAYING, States.PAUSED, EventReasons.MEDIA_BUFFER_UNDERRUN],
-			[States.PLAYING, States.PAUSED, EventReasons.MEDIA_SEEK],
-			[States.PLAYING, States.PAUSED, EventReasons.MEDIA_ERROR],
+  [States.PLAYING, States.PLAYING, EventReasons.MEDIA_CLOCK_UPDATE],
 
-			[States.PLAYING, States.ENDED, EventReasons.MEDIA_END],
+  [States.PLAYING, States.PAUSED, EventReasons.MEDIA_PAUSE],
+  [States.PLAYING, States.PAUSED, EventReasons.MEDIA_BUFFER_UNDERRUN],
+  [States.PLAYING, States.PAUSED, EventReasons.MEDIA_SEEK],
+  [States.PLAYING, States.PAUSED, EventReasons.MEDIA_ERROR],
 
-			[States.ENDED, States.PAUSED, EventReasons.MEDIA_SEEK],
-			[States.ENDED, States.PAUSED, EventReasons.MEDIA_MANUAL_PLAY],
+  [States.PLAYING, States.ENDED, EventReasons.MEDIA_END],
 
-			[States.PAUSED, States.ERROR, EventReasons.MEDIA_ERROR],
+  [States.ENDED, States.PAUSED, EventReasons.MEDIA_SEEK],
+  [States.ENDED, States.PAUSED, EventReasons.MEDIA_MANUAL_PLAY],
 
-			[States.ERROR, States.PAUSED, EventReasons.MEDIA_RECOVER],
-		];
-	}
-	
-	static inspectTransition(transition) {
-		return {
-			from: transition[0],
-			to: transition[1],
-			reason: transition[2]
-		};
-	}
+  [States.PAUSED, States.ERROR, EventReasons.MEDIA_ERROR],
 
-	static mapInspectTransitionsArray(transitionsArray) {
-		return transitionsArray.map((transition) => {
-			return PlaybackStateMachine.inspectTransition(transition);
-		});
-	}
+  [States.ERROR, States.PAUSED, EventReasons.MEDIA_RECOVER]
+]
 
-	static lookupStateOfMediaElement(mediaEl) {
-		const States = PlaybackStateMachine.States;
 
-		if (mediaEl.error) {
-			return States.ERROR;
-		}
+export type PlaybackStateTransition = [PlaybackStates, PlaybackStates, PlaybackStateMachineTransitionReasons]
 
-		if (mediaEl.ended) {
-			return States.ENDED;
-		}
+export class PlaybackStateMachine extends EventEmitter {
 
-		switch(mediaEl.readyState) {
-			case 0:
-				if (mediaEl.src) {
-					return States.READY;
-				} else {
-					return States.NULL;				
-				}
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-				return mediaEl.paused ? States.PAUSED : States.PLAYING;
-		}
-	}
+  static inspectTransition(transition) {
+    return {
+      from: transition[0],
+      to: transition[1],
+      reason: transition[2]
+    }
+  }
 
-	constructor(initialStateOrMediaElement) {
-		super();
-		this.previousState_ = null;
-		this.error_ = null;
+  static mapInspectTransitionsArray(transitionsArray) {
+    return transitionsArray.map((transition) => {
+      return PlaybackStateMachine.inspectTransition(transition)
+    })
+  }
 
-		let initialState;
-		if (typeof initialStateOrMediaElement === 'string') {
-			initialState = initialStateOrMediaElement;
-		} else if (typeof initialStateOrMediaElement === 'object') {
-			initialState = PlaybackStateMachine
-				.lookupStateOfMediaElement(initialStateOrMediaElement);
-		} else if(!!initialStateOrMediaElement) {
-			throw new Error('Constructor argument for PlaybackStateMachine is invalid');
-		}
+  static lookupStateOfMediaElement(mediaEl) {
+    const States = PlaybackStates
 
-		// TODO: check if initialState is a valid state
-		this.state_ = initialState || PlaybackStateMachine.States.NULL;
-	}
+    if (mediaEl.error) {
+      return States.ERROR
+    }
 
-	triggerStateTransition(eventReason) {
-		const Events = PlaybackStateMachine.Events;
-		const possibleTransitions = this.findPossibleTransitions_(eventReason, false);
+    if (mediaEl.ended) {
+      return States.ENDED
+    }
 
-		if (possibleTransitions.length === 0) {
-			throw new Error('No possible state transitions with event reason: ' + eventReason + ' from current state: ' + this.state);
-		}
+    switch(mediaEl.readyState) {
+      case 0:
+        if (mediaEl.src) {
+          return States.READY
+        } else {
+          return States.NULL
+        }
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+        return mediaEl.paused ? States.PAUSED : States.PLAYING
+    }
+  }
 
-		if (possibleTransitions.length !== 1) {
-			throw new Error('More than on possible state transition from current state with event reason:', eventReason);
-		}
+  private state_: PlaybackStates;
+  private previousState_: PlaybackStates;
+  private error_: Error;
 
-		this.previousState_ = this.state_;
+  constructor(initialStateOrMediaElement: MediaElement | PlaybackStates) {
+    super()
+    this.previousState_ = null
+    this.error_ = null
 
-		this.state_ = possibleTransitions[0][1];
+    let initialState
+    if (typeof initialStateOrMediaElement === 'string') {
+      initialState = initialStateOrMediaElement
+    } else if (typeof initialStateOrMediaElement === 'object') {
+      initialState = PlaybackStateMachine
+        .lookupStateOfMediaElement(initialStateOrMediaElement)
+    } else if(initialStateOrMediaElement) {
+      throw new Error('Constructor argument for PlaybackStateMachine is invalid')
+    }
 
-		this.emit(Events.STATE_TRANSITION, eventReason);
-	}
+    // TODO: check if initialState is a valid state
+    this.state_ = initialState || PlaybackStates.NULL
+  }
 
-	findPossibleTransitions_(eventReason, backward) {
-		const Transitions = PlaybackStateMachine.Transitions;
-		const state = this.state;
+  triggerStateTransition(eventReason) {
+    const Events = PlaybackStateMachineEvents
+    const possibleTransitions = this.findPossibleTransitions_(eventReason, false)
 
-		return Transitions.filter((transition) => {
-			return state === transition[backward ? 1 : 0];
-		}).filter((transition) => {
-			if (!eventReason) {
-				return true;
-			}
-			return eventReason === transition[2];
-		});
-	}
+    if (possibleTransitions.length === 0) {
+      throw new Error('No possible state transitions with event reason: ' + eventReason + ' from current state: ' + this.state)
+    }
 
-	notifyError_(err) {
-		this.error_ = err;
-		this.emit(PlaybackStateMachine.Events.FAILURE, err);
-	}
+    if (possibleTransitions.length !== 1) {
+      throw new Error('More than on possible state transition from current state with event reason:' + eventReason)
+    }
 
-	getNextPossibleStates() {
-		const possibleTransitions = this.findPossibleTransitions_(null, false);
+    this.previousState_ = this.state_
 
-		return possibleTransitions.map((transition) => {
-			return transition[1];
-		});
-	}
+    this.state_ = possibleTransitions[0][1]
 
-	getPreviousPossibleStates() {
-		const possibleTransitions = this.findPossibleTransitions_(null, true);
+    this.emit(Events.STATE_TRANSITION, eventReason)
+  }
 
-		return possibleTransitions.map((transition) => {
-			return transition[0];
-		});
-	}
+  findPossibleTransitions_(eventReason, backward) {
+    const Transitions = PlaybackStateMachineTransitions
+    const state = this.state
 
-	emit(eventType, eventReason) {
-		EventEmitter.prototype.emit.call(this, eventType, eventReason);
-	}
+    return Transitions.filter((transition) => {
+      return state === transition[backward ? 1 : 0]
+    }).filter((transition) => {
+      if (!eventReason) {
+        return true
+      }
+      return eventReason === transition[2]
+    })
+  }
 
-	get state() {
-		return this.state_;
-	}
+  notifyError_(err) {
+    this.error_ = err
+    this.emit(PlaybackStateMachineEvents.FAILURE, err)
+  }
 
-	get previousState() {
-		return this.previousState_;
-	}
+  getNextPossibleStates() {
+    const possibleTransitions = this.findPossibleTransitions_(null, false)
 
-	get error() {
-		return this.error_;
-	}
-};
+    return possibleTransitions.map((transition) => {
+      return transition[1]
+    })
+  }
+
+  getPreviousPossibleStates() {
+    const possibleTransitions = this.findPossibleTransitions_(null, true)
+
+    return possibleTransitions.map((transition) => {
+      return transition[0]
+    })
+  }
+
+  emit(eventType, eventReason) {
+    return super.emit(eventType, eventReason)
+  }
+
+  get state() {
+    return this.state_
+  }
+
+  get previousState() {
+    return this.previousState_
+  }
+
+  get error() {
+    return this.error_
+  }
+}

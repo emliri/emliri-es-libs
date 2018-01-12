@@ -1,30 +1,57 @@
-export default class SourceBufferQueue {
+import {MediaSegment} from './media-segment'
 
-	constructor(mediaSource, mimeType, trackDefaults, onUpdate) {
-		this.mimeType_ = mimeType;
-		this.updateStartedTime_ = null;
-		this.queue_ = [];
-		this.bufferMap_ = [];
-		this.bufferedBytesCount_ = 0;
-		this.sourceBuffer_ = mediaSource.addSourceBuffer(mimeType);
-		this.initialMode_ = this.sourceBuffer_.mode;
-		if (trackDefaults) {
-			this.sourceBuffer.trackDefaults = trackDefaults;
-		}
-		this.onUpdate_ = onUpdate;
-		this.sourceBuffer_.addEventListener('updatestart', this.onUpdateStart_.bind(this));
-		this.sourceBuffer_.addEventListener('updateend', this.onUpdateEnd_.bind(this));
-	}
+export type SourceBufferQueueItem = {
+  method: string
+  arrayBuffer?: ArrayBuffer
+  timestampOffset?: number
+  start?: number
+  end?: number
+}
 
-	get mimeType() {
-		return this.mimeType_;
-	}
+export type SourceBufferQueueUpdateCallbackData = {
+  updateTimeMs: number
+}
 
-	get bufferedBytesCount() {
-		return this.bufferedBytesCount_;
-	}
+export type SourceBufferQueueUpdateCallback = (SourceBufferQueue, SourceBufferQueueUpdateCallbackData) => void
 
-	/*
+export class SourceBufferQueue {
+
+  private mimeType_: string;
+  private updateStartedTime_: number;
+  private queue_: SourceBufferQueueItem[];
+
+  private bufferedBytesCount_: number;
+  private sourceBuffer_: SourceBuffer;
+  private initialMode_: string;
+  private onUpdate_: SourceBufferQueueUpdateCallback
+  private bufferMap_: any[];
+
+  constructor(mediaSource, mimeType, trackDefaults, onUpdate) {
+    this.mimeType_ = mimeType
+    this.updateStartedTime_ = null
+    this.queue_ = []
+    this.bufferMap_ = []
+    this.bufferedBytesCount_ = 0
+    this.sourceBuffer_ = mediaSource.addSourceBuffer(mimeType)
+    this.initialMode_ = this.sourceBuffer_.mode
+    if (trackDefaults) {
+      throw new Error('trackDefaults arg not supported (yet) except null')
+      //this.sourceBuffer_.trackDefaults = trackDefaults
+    }
+    this.onUpdate_ = onUpdate
+    this.sourceBuffer_.addEventListener('updatestart', this.onUpdateStart_.bind(this))
+    this.sourceBuffer_.addEventListener('updateend', this.onUpdateEnd_.bind(this))
+  }
+
+  get mimeType() {
+    return this.mimeType_
+  }
+
+  get bufferedBytesCount() {
+    return this.bufferedBytesCount_
+  }
+
+  /*
 
 		The mode property of the SourceBuffer interface controls whether media segments can be appended to the SourceBuffer in any order, or in a strict sequence.
 
@@ -40,147 +67,148 @@ export default class SourceBufferQueue {
 
 	*/
 
-	isInitialModeSequential() {
-		return this.initialMode_ === 'sequence';
-	}
+  isInitialModeSequential() {
+    return this.initialMode_ === 'sequence'
+  }
 
-	getMode() {
-		return this.sourceBuffer_.mode;
-	}
+  getMode() {
+    return this.sourceBuffer_.mode
+  }
 
-	setModeSequential(sequentialModeEnable) {
-		if (isUpdating()) {
-			throw new Error('Can not set mode when updating');
-		}
-		if (!sequentialModeEnable) {
-			if (this.isInitialModeSequential()) {
-				throw new Error('Can not disable sequential model');
-			} else {
-				this.sourceBuffer_.mode = 'segments';
-			}
-		} else {
-			this.sourceBuffer_.mode = 'sequence';
-		}
-	}
+  setModeSequential(sequentialModeEnable) {
+    if (this.isUpdating()) {
+      throw new Error('Can not set mode when updating')
+    }
+    if (!sequentialModeEnable) {
+      if (this.isInitialModeSequential()) {
+        throw new Error('Can not disable sequential model')
+      } else {
+        this.sourceBuffer_.mode = 'segments'
+      }
+    } else {
+      this.sourceBuffer_.mode = 'sequence'
+    }
+  }
 
-	isUpdating() {
-		return this.sourceBuffer_.updating;
-	}
+  isUpdating() {
+    return this.sourceBuffer_.updating
+  }
 
-	getBufferedTimeranges(mediaTimeOffset /* TODO: implement offset */) {
-		return this.sourceBuffer_.buffered;
-	}
+  getBufferedTimeranges(mediaTimeOffset /* TODO: implement offset */) {
+    return this.sourceBuffer_.buffered
+  }
 
-	getTotalBytesQueued() {
-		return this.queue_.filter((item) => {
-			return item.method === 'appendBuffer';
-		}).reduce((accu, item) => {
-			return accu + item.arrayBuffer.byteLength;
-		}, 0);
-	}
+  getTotalBytesQueued() {
+    return this.queue_.filter((item) => {
+      return item.method === 'appendBuffer'
+    }).reduce((accu, item) => {
+      return accu + item.arrayBuffer.byteLength
+    }, 0)
+  }
 
-	getTotalBytes() {
-		return this.bufferedBytesCount + this.getTotalBytesQueued();
-	}
+  getTotalBytes() {
+    return this.bufferedBytesCount + this.getTotalBytesQueued()
+  }
 
-	getItemsQueuedCount(filterMethod) {
-		return this.queue_.filter((item) => {
-			if (!filterMethod) {
-				return true;
-			}
-			return filterMethod === item.method;
-		}).length;
-	}
+  getItemsQueuedCount(filterMethod) {
+    return this.queue_.filter((item) => {
+      if (!filterMethod) {
+        return true
+      }
+      return filterMethod === item.method
+    }).length
+  }
 
-	appendBuffer(arrayBuffer, timestampOffset) {
-		this.queue_.push({method: 'appendBuffer', arrayBuffer, timestampOffset});
+  appendBuffer(arrayBuffer, timestampOffset) {
+    this.queue_.push({method: 'appendBuffer', arrayBuffer, timestampOffset})
 
-		this.tryRunQueueOnce_();
-	}
+    this.tryRunQueueOnce_()
+  }
 
-	appendMediaSegment(segment) {
-		const start = segment.startTime;
-		const end = segment.endTime;
-		const arrayBuffer = segment.arrayBuffer;
+  appendMediaSegment(segment: MediaSegment) {
+    const start = segment.startTime
+    const end = segment.endTime
+    const arrayBuffer = segment.arrayBuffer
+    const timestampOffset = 0
 
-		this.queue_.push({method: 'appendBuffer', start, end, arrayBuffer, timestampOffset});
-		
-		this.tryRunQueueOnce_();
-	}
+    this.queue_.push({method: 'appendBuffer', start, end, arrayBuffer, timestampOffset})
 
-	remove(start, end) {
-		this.queue_.push({method: 'remove', start, end});
+    this.tryRunQueueOnce_()
+  }
 
-		this.tryRunQueueOnce_();
-	}
+  remove(start, end) {
+    this.queue_.push({method: 'remove', start, end})
 
-	dropAsync() {
-		this.queue_.push({method: 'drop', start, end});
+    this.tryRunQueueOnce_()
+  }
 
-		this.tryRunQueueOnce_();
-	}
+  dropAsync() {
+    this.queue_.push({method: 'drop'})
 
-	incrBufferedBytesCnt_(bytes) {
-		this.buffereddBytesCount_ += bytes;
-	}
+    this.tryRunQueueOnce_()
+  }
 
-	decBufferedBytesCnt_(bytes) {
-		this.buffereddBytesCount_ -= bytes;
-	}
+  incrBufferedBytesCnt_(bytes) {
+    this.bufferedBytesCount_ += bytes
+  }
 
-	tryRunQueueOnce_() {
-		if (this.isUpdating()) {
-			return;
-		}
-		const {method, arrayBuffer, timestampOffset, start, end} = this.queue_.shift();
-		this.sourceBuffer_.timestampOffset = timestampOffset;
+  decBufferedBytesCnt_(bytes) {
+    this.bufferedBytesCount_ -= bytes
+  }
 
-		switch(method) {
-		case 'appendBuffer':
-			this.sourceBuffer_[method](arrayBuffer);
-			//this.incrBufferedBytesCnt_(arrayBuffer.bytesLength);
-			// TODO: we need to parse the MP4 here to know what size it is
-			break;
-		case 'remove':
-			this.sourceBuffer_[method](start, end);
-			break;
-		case 'drop':
-			this.drop(false);
-			break;
-		}
-	}
+  tryRunQueueOnce_() {
+    if (this.isUpdating()) {
+      return
+    }
+    const {method, arrayBuffer, timestampOffset, start, end} = this.queue_.shift()
+    this.sourceBuffer_.timestampOffset = timestampOffset
 
-	onUpdateEnd_() {
-		const updateTimeMs = Date.now() - this.updateStartedTime_;
-		const callbackData = {
-			updateTimeMs
-		};
-		this.updateStartedTime_ = null;
-		this.onUpdate_(this, callbackData);
+    switch(method) {
+      case 'appendBuffer':
+        this.sourceBuffer_[method](arrayBuffer)
+        //this.incrBufferedBytesCnt_(arrayBuffer.bytesLength);
+        // TODO: we need to parse the MP4 here to know what size it is
+        break
+      case 'remove':
+        this.sourceBuffer_[method](start, end)
+        break
+      case 'drop':
+        this.drop(false)
+        break
+    }
+  }
 
-		this.tryRunQueueOnce_();
-	}
+  onUpdateEnd_() {
+    const updateTimeMs = Date.now() - this.updateStartedTime_
+    const callbackData = {
+      updateTimeMs
+    }
+    this.updateStartedTime_ = null
+    this.onUpdate_(this, callbackData)
 
-	onUpdateStart_() {
-		if (this.updateStartedTime_ !== null) {
-			throw new Error('updateStartedTime_ should be null');
-		}
-		this.updateStartedTime_ = Date.now();
-	}
+    this.tryRunQueueOnce_()
+  }
 
-	drop(immediateAbort) {
-		if (immediateAbort && this.isUpdating()) {
-			this.sourceBuffer_.abort();			
-		}
-		this.queue_ = [];
-	}
+  onUpdateStart_() {
+    if (this.updateStartedTime_ !== null) {
+      throw new Error('updateStartedTime_ should be null')
+    }
+    this.updateStartedTime_ = Date.now()
+  }
 
-	flush() {
-		this.remove(0, Infinity);
-	}
+  drop(immediateAbort) {
+    if (immediateAbort && this.isUpdating()) {
+      this.sourceBuffer_.abort()
+    }
+    this.queue_ = []
+  }
 
-	dropAndFlush() {
-		this.drop(true);
-		this.flush();
-	}
+  flush() {
+    this.remove(0, Infinity)
+  }
+
+  dropAndFlush() {
+    this.drop(true)
+    this.flush()
+  }
 }

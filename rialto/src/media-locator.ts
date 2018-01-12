@@ -1,4 +1,4 @@
-export type MediaClockTime = number;
+export type MediaClockTime = number
 
 export class ByteRange {
 
@@ -6,10 +6,10 @@ export class ByteRange {
     to: number;
 
     constructor(from, to) {
-        this.from = from;
-        this.to = to;
+      this.from = from
+      this.to = to
     }
-};
+}
 
 export class MediaLocator {
 
@@ -19,13 +19,13 @@ export class MediaLocator {
     byteRange: ByteRange;
 
     static get ByteRange() {
-        return ByteRange;
+      return ByteRange
     }
 
     constructor(uri, startTime, endTime, byteRange) {
-        this.uri = uri;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.byteRange = byteRange;
+      this.uri = uri
+      this.startTime = startTime
+      this.endTime = endTime
+      this.byteRange = byteRange
     }
-};
+}

@@ -1,129 +1,149 @@
-import EventEmitter3 from 'eventemitter3';
+import {EventEmitter} from 'eventemitter3'
 
-import MediaCache from './media-cache';
+import {mediaCacheInstance} from './media-cache'
+import {MediaLocator} from './media-locator'
 
-export default class MediaSegment extends EventEmitter3 {
+type AbortController = {
+  abort: () => void
+}
 
-    constructor(locator, cached = false) {
-        this.cached = cached;
-        this.locator_ = locator;
-        this.mimeType_ = null;
-        this.fetchPromise_ = null;
-        this.abortCtrl_ = null;
-        this.ab_ = null;
+export class MediaSegment extends EventEmitter {
 
-        this.abortedCnt_ = 0;
-        this.fetchAttemptCnt_ = 0;
+    cached: boolean;
+
+    private locator_: MediaLocator;
+    private mimeType_: string;
+    private ab_: ArrayBuffer;
+    private fetchPromise_: Promise<Response>;
+    private abortCtrl_?: AbortController;
+    private abortedCnt_: number;
+    private fetchAttemptCnt_: number;
+
+    constructor(locator: MediaLocator, cached = false) {
+      super()
+
+      this.cached = cached
+      this.locator_ = locator
+      this.mimeType_ = null
+      this.fetchPromise_ = null
+      this.abortCtrl_ = null
+      this.ab_ = null
+
+      this.abortedCnt_ = 0
+      this.fetchAttemptCnt_ = 0
     }
 
     getUrl() {
-        return this.uri;
+      return this.uri
     }
 
     setArrayBuffer(ab) {
-        this.ab_ = ab;
-        this.emit('setarraybuffer');
+      this.ab_ = ab
+      this.emit('setarraybuffer')
     }
 
     clearArrayBuffer(ab) {
-        this.ab_ = null;
-        this.emit('cleararraybuffer');
+      this.ab_ = null
+      this.emit('cleararraybuffer')
     }
 
     hasArrayBuffer(ab) {
-        this.ab_ !== null;
+      this.ab_ !== null
     }
 
     decrypt() {
-        //
+      //
     }
 
     fetch(retries, retryDelayMs) {
 
-        this.fetchAttemptCnt_++;
+      this.fetchAttemptCnt_++
 
-        var headers = new Headers();
-        var abortCtrl = new AbortController();
+      /*
+      var headers = new Headers()
+      var abortCtrl = new AbortController()
 
-        if (this.byteRange) {
-            headers.append('Byte-Range', this.byteRange.from +  '-' + this.byteRange.to);
+      if (this.byteRange) {
+        headers.append('Byte-Range', this.byteRange.from +  '-' + this.byteRange.to)
+      }
+
+      var initOptions = {
+        method: 'GET',
+        headers,
+        //mode: 'cors',
+        //cache: 'default',
+        signal: abortCtrl.signal
+      }
+
+      this.abortCtrl_  = abortCtrl
+      this.fetchPromise_ = fetch(this.getUrl(), initOptions).then((response) => {
+
+        if(!response.ok) {
+          throw new Error('Response status not OK: ' + response.status)
         }
 
-        var initOptions = {
-            method: 'GET',
-            headers,
-            mode: 'cors',
-            cache: 'default',
-            signal: abortCtrl.signal
-        };
+        return response.arrayBuffer()
 
-        this.abortCtrl_  = abortCtrl;
-        this.fetchPromise_ = fetch(this.getUrl(), initOptions).then((response) => {
+      }).then((ab) => {
+        this.setArrayBuffer(ab)
+        this.emit('fetchsuccess')
+      }).catch((error) => {
+        if (retries > 0) {
+          setTimeout(() => {
+            this.fetch(--retries, retryDelayMs)
+          }, retryDelayMs)
+        } else {
+          this.emit('fetcherror', error)
+        }
+      })
+      */
 
-            if(!response.ok) {
-                throw new Error('Response status not OK: ' + response.status);                
-            }
-
-            return response.arrayBuffer();
-
-        }).then((ab) => {
-            this.setArrayBuffer(ab);
-            this.emit('fetchsuccess');
-        }).catch((error) => {
-            if (retries > 0) {
-                setTimeout(() => {
-                    this.fetch(--retries, retryDelayMs);
-                }, retryDelayMs);
-            } else {
-                this.emit('fetcherror', error);
-            }
-        });
     }
 
     abort() {
-        if (!this.abortCtrl_) {
-            throw new Error('can not abort, no fetch seems to be happening or already aborted');
-        }
-        this.abortedCnt_++;
-        this.abortCtrl_.abort();
-        this.abortCtrl_ = null;
-        this.fetchPromise_ = null;
-        this.emit('abort');
+      if (!this.abortCtrl_) {
+        throw new Error('can not abort, no fetch seems to be happening or already aborted')
+      }
+      this.abortedCnt_++
+      this.abortCtrl_.abort()
+      this.abortCtrl_ = null
+      this.fetchPromise_ = null
+      this.emit('abort')
     }
 
     get arrayBuffer() {
-        return this.ab_;
+      return this.ab_
     }
 
     get timesAborted() {
-        return this.abortedCnt_;
+      return this.abortedCnt_
     }
 
     get timesFetchAttempted() {
-        return this.fetchAttemptCnt_++;
+      return this.fetchAttemptCnt_++
     }
 
     get isFetching() {
-        return !!this.fetchPromise_;
+      return !!this.fetchPromise_
     }
 
     get mimeType() {
-        return this.mimeType_;
+      return this.mimeType_
     }
 
     get byteRange() {
-        return this.locator_.byteRange;
+      return this.locator_.byteRange
     }
 
     get uri() {
-        return this.locator_.uri;
+      return this.locator_.uri
     }
-    
+
     get startTime() {
-        return this.locator_.startTime;
+      return this.locator_.startTime
     }
 
     get endTime() {
-        return this.locator_.endTime;
+      return this.locator_.endTime
     }
 }
