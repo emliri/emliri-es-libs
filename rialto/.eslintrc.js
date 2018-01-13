@@ -13,7 +13,9 @@ module.exports = {
     "allowImportExportEverywhere": true // We need this for Webpack code-splitting (dynamic import)
   },
   "plugins": [
-    "typescript"
+    "typescript",
+    "json",
+    "markdown"
   ],
   "rules": {
     /* TypeScript related setup */

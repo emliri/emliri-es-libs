@@ -13,7 +13,10 @@
     "@types/webpack": "^3.8.2",
     "chai": "^4.1.2",
     "eslint": "^4.15.0",
+    "eslint-plugin-json": "^1.2.0",
+    "eslint-plugin-markdown": "^1.0.0-beta.6",
     "eslint-plugin-typescript": "^0.8.1",
+    "htmlhint": "^0.9.13",
     "husky": "^0.14.3",
     "jasmine": "^2.8.0",
     "jasmine-ts": "^0.2.1",
@@ -25,11 +28,14 @@
     "webpack-dev-server": "^2.9.3"
   },
   "scripts": {
-    "build": "ts-node webpack --progress",
-    "build:release": "webpack --progress --env.release",
+    "build": "ts-node ./node_modules/.bin/webpack --progress",
+    "build:release": "npm run build -- --env.release",
     "lint": "eslint . *.js *.ts 'src/**/*.ts'",
+    "lint:html": "htmlhint *.html demo/**/*.html",
+    "lint:md": "eslint --ext md .",
+    "lint:json": "eslint --ext json .",
     "precommit": "./precommit.bash",
-    "start": "webpack-dev-server --progress",
+    "start": "ts-node ./node_modules/.bin/webpack-dev-server --progress",
     "test": "jasmine-ts \"src/**/*.spec.ts\""
   },
   "author": "",

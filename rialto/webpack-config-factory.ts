@@ -42,12 +42,12 @@ export function createWebpackConfig(options) {
     },
     resolve: {
       // Add `.ts` and `.tsx` as a resolvable extension.
-      extensions: ['.ts', '.tsx', '.js']
+      extensions: ['.ts', '.tsx' /*, '.js'*/]
     },
     module: {
       rules: [
         {
-          test: /\.tsx?$|\.js$/,
+          test: /\.tsx?$/, // /\.tsx?$|\.js$/,
           exclude: /(node_modules|bower_components)/,
           use: {
             loader: 'ts-loader'

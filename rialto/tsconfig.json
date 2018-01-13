@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-      "allowJs": true,
-      //"declaration": true, // see https://github.com/Microsoft/TypeScript/issues/7546
-      "module": "commonjs",
-      "target": "es2015"
+    "allowJs": true,
+    //"noImplicitAny": true,
+    //"declaration": true, // see https://github.com/Microsoft/TypeScript/issues/7546
+    "module": "commonjs",
+    "target": "es2015"
   },
   "include": [
-      "index.ts",
-      "src/**/*"
+    "index.ts",
+    "lib/**/*"
   ],
   "exclude": [
-      "node_modules",
-      "**/*.spec.ts"
+    "node_modules",
+    "**/*.spec.ts"
   ]
 }
