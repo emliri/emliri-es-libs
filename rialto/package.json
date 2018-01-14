@@ -1,8 +1,14 @@
 {
-  "name": "rialto",
+  "author": "",
+  "license": "ISC",
+  "name": "@emliri/rialto",
+  "private": true,
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
+  "directories": {
+    "lib": "lib"
+  },
   "dependencies": {
     "eventemitter3": "^2.0.3",
     "string.prototype.padend": "^3.0.0"
@@ -37,7 +43,5 @@
     "precommit": "./precommit.bash",
     "start": "ts-node ./node_modules/.bin/webpack-dev-server --progress",
     "test": "jasmine-ts \"src/**/*.spec.ts\""
-  },
-  "author": "",
-  "license": "ISC"
+  }
 }

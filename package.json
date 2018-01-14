@@ -1,17 +1,21 @@
 {
-  "name": "@emliri/objec-ts",
+  "name": "@emliri/libs",
   "private": true,
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "directories": {
-    "lib": "lib"
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tchakabam/emliri-libs-js.git"
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "eventemitter3": "^3.0.0"
+  "bugs": {
+    "url": "https://github.com/tchakabam/emliri-libs-js/issues"
   },
+  "homepage": "https://github.com/tchakabam/emliri-libs-js#readme",
   "devDependencies": {
     "@types/chai": "^4.1.0",
     "@types/jasmine": "^2.8.3",
@@ -31,16 +35,5 @@
     "typescript-eslint-parser": "^11.0.0",
     "webpack": "^3.8.1",
     "webpack-dev-server": "^2.9.3"
-  },
-  "scripts": {
-    "build": "ts-node ./node_modules/.bin/webpack --progress",
-    "build:release": "npm run build -- --env.release",
-    "lint": "eslint . *.js *.ts 'src/**/*.ts'",
-    "lint:html": "htmlhint *.html demo/**/*.html",
-    "lint:md": "eslint --ext md .",
-    "lint:json": "eslint --ext json .",
-    "precommit": "./precommit.bash",
-    "start": "ts-node ./node_modules/.bin/webpack-dev-server --progress",
-    "test": "jasmine-ts \"src/**/*.spec.ts\""
   }
 }
