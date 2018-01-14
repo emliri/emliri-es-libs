@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "eventemitter3": "^2.0.3"
+    "eventemitter3": "^2.0.3",
+    "string.prototype.padend": "^3.0.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.0",
@@ -17,7 +18,6 @@
     "eslint-plugin-markdown": "^1.0.0-beta.6",
     "eslint-plugin-typescript": "^0.8.1",
     "htmlhint": "^0.9.13",
-    "husky": "^0.14.3",
     "jasmine": "^2.8.0",
     "jasmine-ts": "^0.2.1",
     "ts-loader": "^3.2.0",
