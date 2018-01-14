@@ -1,11 +1,11 @@
-import {createWebpackConfig} from './webpack-config-factory'
+import {createWebpackConfig} from '../webpack-config-factory'
 
 const configs = []
 
 // Library
 {
   const entrySrc = './index.ts'
-  const libName = 'rialto'
+  const libName = 'Rialto'
   const buildPath = 'dist'
   const libraryTarget = 'umd'
   const debug = true
@@ -24,7 +24,7 @@ const configs = []
 // Demo
 {
   const entrySrc = './demo/main.ts'
-  const libName = 'rialtoDemo'
+  const libName = 'RialtoDemo'
   const buildPath = 'dist'
   const libraryTarget = 'umd'
   const debug = true
