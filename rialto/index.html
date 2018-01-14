@@ -13,24 +13,13 @@
       <p>Your user agent does not support the HTML5 Video element.</p>
     </video>
 
-    <script src="dist/rialto.umd.js"></script>
-
+    <script src="dist/Rialto.umd.js"></script>
+    <script src="dist/RialtoDemo.umd.js"></script>
     <script type="text/javascript">
 
-      var rialto = window.rialto.default;
+      var videoEl = document.getElementById('video')
 
-      var video = document.getElementById('video');
-
-      var onMediaElementEventTranslatedCb = function(mediaSession, eventReason) {
-        console.log('Media element event translated:', eventReason);
-      };
-
-      var onPlaybackStateMachineTransitionCb = function(mediaSession) {
-        console.log('Media playback state', mediaSession.mediaPlaybackState);
-      };
-
-      var mediaSession = new rialto.MediaSession(video,
-        onMediaElementEventTranslatedCb, onPlaybackStateMachineTransitionCb);
+      window.onload = RialtoDemo.RialtoDemoApp.onPageLoaded(videoEl)
 
     </script>
 
