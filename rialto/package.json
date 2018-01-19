@@ -36,7 +36,7 @@
   "scripts": {
     "build": "ts-node ./node_modules/.bin/webpack --progress",
     "build:release": "npm run build -- --env.release",
-    "lint": "eslint . *.js *.ts 'src/**/*.ts'",
+    "lint": "eslint . *.js *.ts 'demo/**/*.ts' 'lib/**/*.ts'",
     "lint:html": "htmlhint *.html demo/**/*.html",
     "lint:md": "eslint --ext md .",
     "lint:json": "eslint --ext json .",
