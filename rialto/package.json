@@ -10,8 +10,10 @@
     "lib": "lib"
   },
   "dependencies": {
+    "@types/vue": "^2.0.0",
     "eventemitter3": "^2.0.3",
-    "string.prototype.padend": "^3.0.0"
+    "string.prototype.padend": "^3.0.0",
+    "vue": "^2.5.13"
   },
   "devDependencies": {
     "@types/chai": "^4.1.0",
