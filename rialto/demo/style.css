@@ -1,0 +1,18 @@
+#video-wrapper {
+  width: 100%;
+  text-align: center;
+}
+
+#page-header {
+  width: 100%;
+  text-align: center;
+}
+
+.session-history {
+  width: 60%;
+  margin: auto
+}
+
+.session-history h2 {
+  text-align: center
+}

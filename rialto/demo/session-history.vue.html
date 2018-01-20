@@ -1,0 +1,8 @@
+<div class="session-history">
+  <h2>
+    Session playback-state-machine history
+  </h2>
+  <ul>
+    <session-history-item v-for="item in sessionHistory" v-bind:history="item" v-bind:key="item.id"></session-history-item>
+  </ul>
+</div>
