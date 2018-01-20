@@ -67,7 +67,7 @@ export function createWebpackConfig(options) {
         {
           test: /\.css$/,
           use: [
-            'vue-style-loader',
+            'vue-style-loader', // see https://github.com/vuejs/vue-style-loader
             'css-loader'
           ],
         },      {

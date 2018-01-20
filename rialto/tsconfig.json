@@ -16,6 +16,7 @@
   },
   "include": [
     "index.ts",
+    "demo/**/*.ts",
     "lib/**/*.ts"
   ],
   "exclude": [

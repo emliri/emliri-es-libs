@@ -12,6 +12,7 @@
   "dependencies": {
     "@types/vue": "^2.0.0",
     "eventemitter3": "^2.0.3",
+    "ololog": "^1.1.84",
     "string.prototype.padend": "^3.0.0",
     "vue": "^2.5.13"
   },
@@ -25,6 +26,7 @@
     "eslint-plugin-json": "^1.2.0",
     "eslint-plugin-markdown": "^1.0.0-beta.6",
     "eslint-plugin-typescript": "^0.8.1",
+    "html-loader": "^0.5.5",
     "htmlhint": "^0.9.13",
     "jasmine": "^2.8.0",
     "jasmine-ts": "^0.2.1",
@@ -32,6 +34,8 @@
     "ts-node": "^4.1.0",
     "typescript": "^2.6.2",
     "typescript-eslint-parser": "^11.0.0",
+    "vue-loader": "^13.7.0",
+    "vue-template-compiler": "^2.5.13",
     "webpack": "^3.8.1",
     "webpack-dev-server": "^2.9.3"
   },
@@ -39,7 +43,7 @@
     "build": "ts-node ./node_modules/.bin/webpack --progress",
     "build:release": "npm run build -- --env.release",
     "lint": "eslint . *.js *.ts 'demo/**/*.ts' 'lib/**/*.ts'",
-    "lint:html": "htmlhint *.html demo/**/*.html",
+    "lint:html": "htmlhint --config ../.htmlhintrc.json *.html demo/**/*.html",
     "lint:md": "eslint --ext md .",
     "lint:json": "eslint --ext json .",
     "precommit": "./precommit.bash",
