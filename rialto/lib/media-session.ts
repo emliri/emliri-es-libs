@@ -92,7 +92,7 @@ export class MediaSession {
     try {
       this.playbackStateMachine_.triggerStateTransition(eventReason)
     } catch(e) {
-      console.log('PlaybackStateMachine transition attempt error:', e.message)
+      console.warn('PlaybackStateMachine transition attempt error:', e.message)
     }
   }
 
