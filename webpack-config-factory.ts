@@ -41,8 +41,10 @@ export function createWebpackConfig(options) {
       sourceMapFilename: '[file].map'
     },
     resolve: {
-      // Add `.ts` and `.tsx` as a resolvable extension.
-      extensions: ['.ts', '.tsx', '.js']
+      extensions: ['*', '.ts', '.tsx', '.js', '.vue', '.json', '.html'],
+      alias: {
+        'vue$': 'vue/dist/vue.esm.js'
+      },
     },
     module: {
       rules: [
@@ -51,6 +53,37 @@ export function createWebpackConfig(options) {
           exclude: /(node_modules|bower_components)/,
           use: {
             loader: 'ts-loader'
+          }
+        },
+        {
+          test: /\.(html)$/,
+          use: {
+            loader: 'html-loader',
+            options: {
+              //attrs: [':data-src']
+            }
+          }
+        },
+        {
+          test: /\.css$/,
+          use: [
+            'vue-style-loader',
+            'css-loader'
+          ],
+        },      {
+          test: /\.vue$/,
+          loader: 'vue-loader',
+          options: {
+            loaders: {
+            }
+            // other vue-loader options go here
+          }
+        },
+        {
+          test: /\.(png|jpg|gif|svg)$/,
+          loader: 'file-loader',
+          options: {
+            name: '[name].[ext]?[hash]'
           }
         }
       ]
