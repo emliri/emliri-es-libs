@@ -41,7 +41,7 @@ export function createWebpackConfig(options) {
       sourceMapFilename: '[file].map'
     },
     resolve: {
-      extensions: ['*', '.ts', '.tsx', '.js', '.vue', '.json', '.html'],
+      extensions: ['*', '.ts', '.tsx', '.js', '.json', '.html', '.css', '.vue',],
       alias: {
         'vue$': 'vue/dist/vue.esm.js'
       },
