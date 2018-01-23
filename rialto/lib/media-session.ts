@@ -1,9 +1,9 @@
 import {PlaybackStateMachine, PlaybackStateMachineEvents, PlaybackStateMachineTransitionReasons} from './playback-state-machine'
-import {MediaElementObserver, MediaElement} from './media-element-observer'
+import {MediaElementObserver, MediaElement, MediaEventReasons} from './media-element-observer'
 
-export type MediaEventTranslationCallback = (MediaSession, PlaybackStateMachineTransitionReasons) => void
+export type MediaEventTranslationCallback = (MediaSession, MediaEventReasons) => void
 
-export type PlaybackStateMachineTransitionCallback = (MediaSession) => void
+export type PlaybackStateMachineTransitionCallback = (MediaSession, PlaybackStateMachineTransitionReasons) => void
 
 export class MediaSession {
 
@@ -41,7 +41,7 @@ export class MediaSession {
     this.onMediaElementEventTranslatedCb_ = onMediaElementEventTranslatedCb
     this.onPlaybackStateMachineTransitionCb_ = onPlaybackStateMachineTransitionCb
 
-    this.mediaElObserver_ = new MediaElementObserver(this.onMediaElementEventTranslated_.bind(this))
+    this.mediaElObserver_ = new MediaElementObserver(this.onMediaElementEventTranslated_.bind(this), 60)
     this.mediaElObserver_.attachMedia(this.mediaElement)
 
     this.playbackStateMachine_ = new PlaybackStateMachine(
@@ -96,14 +96,17 @@ export class MediaSession {
     }
   }
 
-  onPlaybackStateMachineTransition_() {
-
+  onPlaybackStateMachineTransition_(eventReason) {
     if (this.onPlaybackStateMachineTransitionCb_) {
-      this.onPlaybackStateMachineTransitionCb_(this)
+      this.onPlaybackStateMachineTransitionCb_(this, eventReason)
     }
   }
 
   onPlaybackStateMachineFailure_() {
     throw new Error('PlaybackStateMachine had a fatal error')
+  }
+
+  setMediaObserverPollingFps(pollingFps) {
+    this.mediaElObserver_.setPollingFps(pollingFps)
   }
 }

@@ -1,6 +1,10 @@
 import {PlaybackStateMachine, PlaybackStateMachineTransitionReasons} from './playback-state-machine'
 
-const EventReasons = PlaybackStateMachineTransitionReasons
+export const MediaEventReasons = PlaybackStateMachineTransitionReasons
+
+const EventReasons = MediaEventReasons
+
+const MAX_POLLING_FPS = 60
 
 export type MediaElement = HTMLMediaElement
 
@@ -14,6 +18,10 @@ export class MediaElementObserver {
 
   private mediaElEventHandlers_: MediaEventHandler[];
   private mediaElEventsRegistered_: string[];
+  private pollingInterval_: number;
+  private pollingFps_: number;
+  private previousMediaTime_: number;
+  private previousEventReason_: string;
 
   get mediaEl(): MediaElement {
     return this.mediaEl_
@@ -23,7 +31,11 @@ export class MediaElementObserver {
     return !! this.mediaEl_
   }
 
-  constructor(eventTranslatorCallback) {
+  /**
+   * @param eventTranslatorCallback
+   * @param pollingFps How many frames-per-second to aim for at polling to update state
+   */
+  constructor(eventTranslatorCallback, pollingFps?: number) {
     this.resetMedia()
 
     if (!eventTranslatorCallback) {
@@ -31,9 +43,33 @@ export class MediaElementObserver {
     }
 
     this.eventTranslatorCallback_ = eventTranslatorCallback
+
+    this.pollingFps_ = pollingFps;
+
+    this.setPollingFps(pollingFps)
+  }
+
+  /**
+   * @param pollingFps How many frames-per-second to aim for at polling to update state (pass NaN or 0 to unset)
+   */
+  setPollingFps(pollingFps: number) {
+    clearInterval(this.pollingInterval_)
+    if (pollingFps > MAX_POLLING_FPS) {
+      throw new Error(`Clock-polling FPS can not be larger than ${MAX_POLLING_FPS} but requested ${pollingFps}`)
+    }
+    if (typeof pollingFps === 'number' && pollingFps > 0) {
+      const intervalMs = 1000 / pollingFps
+      this.pollingInterval_ = setInterval(this.onPollFrame_.bind(this), intervalMs)
+    }
+  }
+
+  dispose() {
+    this.detachMedia()
   }
 
   resetMedia() {
+    clearInterval(this.pollingInterval_)
+    this.previousMediaTime_ = null;
     this.mediaEl_ = null // HTMLMediaElement
     this.mediaElEventHandlers_ = []
   }
@@ -203,5 +239,18 @@ export class MediaElementObserver {
 
   private onEventTranslated_(eventReason) {
     this.eventTranslatorCallback_(eventReason)
+    this.previousEventReason_ = eventReason
+  }
+
+  private onPollFrame_() {
+    if (
+      this.mediaEl.readyState > 0
+      && this.previousEventReason_ !== EventReasons.MEDIA_PAUSE
+    ) {
+      if (this.mediaEl.currentTime !== this.previousMediaTime_) {
+        this.onEventTranslated_(EventReasons.MEDIA_CLOCK_UPDATE)
+        this.previousMediaTime_ = this.mediaEl.currentTime
+      }
+    }
   }
 }

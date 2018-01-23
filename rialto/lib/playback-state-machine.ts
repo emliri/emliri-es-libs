@@ -55,6 +55,7 @@ export const PlaybackStateMachineTransitions: PlaybackStateTransition[] = [
 
   [States.METADATA_LOADING, States.ERROR, EventReasons.MEDIA_ERROR],
 
+  [States.PAUSED, States.PAUSED, EventReasons.MEDIA_ENGINE_INIT],
   [States.PAUSED, States.PAUSED, EventReasons.MEDIA_AUTO_PLAY],
   [States.PAUSED, States.PAUSED, EventReasons.MEDIA_MANUAL_PLAY],
   [States.PAUSED, States.PAUSED, EventReasons.MEDIA_SEEK],
@@ -62,7 +63,6 @@ export const PlaybackStateMachineTransitions: PlaybackStateTransition[] = [
   [States.PAUSED, States.PAUSED, EventReasons.MEDIA_LOADING_PROGRESS],
 
   [States.PAUSED, States.PLAYING, EventReasons.MEDIA_CLOCK_UPDATE],
-
   [States.PLAYING, States.PLAYING, EventReasons.MEDIA_CLOCK_UPDATE],
 
   [States.PLAYING, States.PAUSED, EventReasons.MEDIA_PAUSE],
