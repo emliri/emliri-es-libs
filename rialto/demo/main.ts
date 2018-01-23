@@ -16,6 +16,14 @@ require('./style')
 const MainTemplate = require('./main.vue')
 const SessionHistoryTemplate = require('./session-history.vue')
 const SessionHistoryItemTemplate = require('./session-history-item.vue')
+const SessionClockTemplate = require('./session-clock.vue')
+
+type StateChangeHistoryItem = {
+  state: string,
+  reason: string,
+  logText: string,
+  time: Date
+}
 
 export namespace RialtoDemoApp {
 
@@ -32,15 +40,24 @@ export namespace RialtoDemoApp {
         }
       })
 
+      Vue.component('session-clock', {
+        template: SessionClockTemplate,
+        data () {
+          return app.sessionClockData
+        }
+      })
+
       Vue.component('session-history', {
         template: SessionHistoryTemplate,
         data () {
-          return app.sessionHistoryData
+          return {
+            sessionHistoryData: app.sessionHistoryData
+          }
         },
       })
 
       Vue.component('session-history-item', {
-        props: ['history'],
+        props: ['item'],
         template: SessionHistoryItemTemplate
       })
 
@@ -56,12 +73,11 @@ export namespace RialtoDemoApp {
 
     private _previousState: string
     private _currentState: string
-    private _lastEventReason: string
 
-    private _stateChangeHistory: object[]
+    private _stateChangeHistory: StateChangeHistoryItem[]
     private _eventHistory: string[]
 
-    sessionHistoryData: any
+    private _sessionClockData: any
 
     constructor(videoElement: HTMLMediaElement) {
 
@@ -69,47 +85,67 @@ export namespace RialtoDemoApp {
         this.onMediaElementEventTranslatedCb_.bind(this),
         this.onPlaybackStateMachineTransitionCb_.bind(this));
 
-      const stateChangeHistory = this._stateChangeHistory
-
       this._eventHistory = []
+
       this._stateChangeHistory = []
 
-      this.sessionHistoryData = {
-        sessionHistory: []
+      this._sessionClockData = {
+        time: 0,
+        frame: 0,
+        updateEventCount: 0
       }
 
       this._vueApp = RialtoDemoApp.declareVueComponents(this)
     }
 
-    onPlaybackStateMachineTransitionCb_(mediaSession) {
-      console.log('Media playback state', mediaSession.mediaPlaybackState);
+    get sessionHistoryData() {
+      return this._stateChangeHistory;
+    }
 
-      if (this._currentState) {
-        this._previousState = this._currentState
+    get sessionClockData() {
+      return this._sessionClockData;
+    }
+
+    onPlaybackStateMachineTransitionCb_(mediaSession: MediaSession,
+        reason: PlaybackStateMachineTransitionReasons) {
+
+      const state = mediaSession.mediaPlaybackState
+
+      this._previousState = this._currentState
+      this._currentState = state;
+
+      const previousStateChangeHistoryItem = this._stateChangeHistory[this._stateChangeHistory.length - 1]
+      // only add to history if it's actually something new
+      if (previousStateChangeHistoryItem &&
+        previousStateChangeHistoryItem.state === state &&
+        previousStateChangeHistoryItem.reason === reason
+      ) {
+        return;
       }
 
-      this._currentState = mediaSession.mediaPlaybackState
+      console.log('Media playback state', state, 'reason:', reason);
+
+      const time = new Date()
+      const timeString = `${time.toLocaleTimeString()} + ${time.getMilliseconds()}`
+      const logText = `[${timeString}] | New state: ${state}, transition reason: ${reason}`
 
       const item = {
-        state: mediaSession.mediaPlaybackState,
-        reason: this._lastEventReason
+        time,
+        state,
+        reason,
+        logText
       }
 
       this._stateChangeHistory.push(item)
-
-      if (item.reason !== PlaybackStateMachineTransitionReasons.MEDIA_CLOCK_UPDATE) {
-        this.sessionHistoryData.sessionHistory.push({
-          text: `New state: ${item.state}, transition reason: ${item.reason}`
-        })
-      }
-
     }
 
     onMediaElementEventTranslatedCb_(mediaSession, eventReason) {
-      console.log('Media element event translated:', eventReason);
-
-      this._eventHistory.push(eventReason)
-      this._lastEventReason = eventReason
+      if (eventReason === PlaybackStateMachineTransitionReasons.MEDIA_CLOCK_UPDATE) {
+        this.sessionClockData.time = mediaSession.mediaElement.currentTime
+      } else {
+        console.log('Media element event translated:', eventReason);
+        this._eventHistory.push(eventReason)
+      }
     }
   }
 

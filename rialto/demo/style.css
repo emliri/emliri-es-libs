@@ -1,6 +1,7 @@
 #video-wrapper {
   width: 100%;
   text-align: center;
+  margin-bottom: 2em;
 }
 
 #page-header {
@@ -15,4 +16,14 @@
 
 .session-history h2 {
   text-align: center
+}
+
+.session-clock {
+  width: 60%;
+  margin: auto;
+  text-align: center;
+}
+
+.session-clock-display {
+
 }
