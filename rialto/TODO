@@ -13,3 +13,9 @@
 - Frame-precision seek
 
 - DASH demo
+
+- Decibel volume
+
+- Audio-out VU-meter, FFT
+
+- Canvas rendering (+BBC stuff)
