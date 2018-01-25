@@ -8,13 +8,12 @@ const {
   warn
 } = getLogger('media-session')
 
-type StateChangeHistoryItem = {
+export type MediaSessionHistoryItem = {
   state: string,
   reason: string,
   logText: string,
   time: Date
 }
-
 
 export type MediaEventTranslationCallback = (MediaSession, MediaEventReasons) => void
 
@@ -43,7 +42,7 @@ export class MediaSession {
   private _previousState: string = PlaybackStates.NULL
   private _currentState: string = PlaybackStates.NULL
 
-  private _stateChangeHistory: StateChangeHistoryItem[]
+  private _stateChangeHistory: MediaSessionHistoryItem[]
   private _eventHistory: string[]
 
   private _sessionClockData: {
