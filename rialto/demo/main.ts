@@ -1,11 +1,19 @@
 import {
   MediaSession,
+  MediaSegmentQueue,
+  MediaSegment,
+  MediaLocator,
   PlaybackStateMachine,
   PlaybackStateMachineTransitionReasons,
-  PlaybackStates
+  PlaybackStates,
+  getLogger
 } from '../index'
 
 import Vue from 'vue'
+
+const {
+  log
+} = getLogger('demo/main')
 
 const BOOTSWATCH_THEME_NAME = "Yeti";
 
@@ -74,12 +82,12 @@ export namespace RialtoDemoApp {
       this._mediaSession = mediaSession
 
       this._vueApp = RialtoDemoApp.declareVueComponents(this, 'app')
+
     }
 
     get mediaSession() {
       return this._mediaSession
     }
-
 
     onPlaybackStateMachineTransitionCb_(mediaSession: MediaSession,
         reason: PlaybackStateMachineTransitionReasons) {
@@ -96,6 +104,29 @@ export namespace RialtoDemoApp {
     new RialtoDemoApp(videoElement)
   }
 
+  export const runMediaSegmentQueueExample = () => {
+    const locator = new MediaLocator('v-0360p-0550k-vp9.webm')
+    const badLocator = new MediaLocator('v-0360p-0550k-vp9.webm__')
+
+    const queue = new MediaSegmentQueue()
+
+    queue.
+      add(new MediaSegment(locator)).
+      add(new MediaSegment(locator)).
+      add(new MediaSegment(locator)).
+      add(new MediaSegment(badLocator)).
+      add(new MediaSegment(locator))
+
+    queue.on('fetch-next:done', (mediaSegment) => {
+      log('done:', mediaSegment)
+    })
+
+    queue.on('fetch-next:error', (mediaSegment) => {
+      log('error:', mediaSegment)
+    })
+
+    queue.fetchAll()
+  }
 }
 
 
