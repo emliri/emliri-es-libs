@@ -1,20 +1,32 @@
 import {PlaybackStateMachine, PlaybackStateMachineTransitionReasons} from './playback-state-machine'
 
-export const MediaEventReasons = PlaybackStateMachineTransitionReasons
-
-const EventReasons = MediaEventReasons
-
 const MAX_POLLING_FPS = 60
+
+export const MediaEventReasons = PlaybackStateMachineTransitionReasons
 
 export type MediaElement = HTMLMediaElement
 
 export type MediaEventHandler = () => void
 
+export type MediaEventTranslationCallback = (eventReason: string) => void
+
+/**
+ *
+ * MediaElementObserver takes a callback as argument during construction.
+ *
+ * Every event of media-element is thus "translated" to a single event all handled
+ * through this callback. The latter is being called with a value from the `MediaEventReasons`
+ * enum, which is always identical with the `PlaybackStateMachineTransitionReasons`.
+ *
+ * Every callback from the media-observer is therefore a potential transition cause for the playback state-machine.
+ *
+ * @constructor
+ */
 export class MediaElementObserver {
 
   private mediaEl_: MediaElement;
 
-  private eventTranslatorCallback_: (eventReason: string) => void;
+  private eventTranslatorCallback_: MediaEventTranslationCallback;
 
   private mediaElEventHandlers_: MediaEventHandler[];
   private mediaElEventsRegistered_: string[];
@@ -32,6 +44,7 @@ export class MediaElementObserver {
   }
 
   /**
+   * @constructs
    * @param eventTranslatorCallback
    * @param pollingFps How many frames-per-second to aim for at polling to update state
    */
@@ -117,32 +130,32 @@ export class MediaElementObserver {
 
       switch(mediaEl.readyState) {
         case 0:
-          onEventTranslated(EventReasons.MEDIA_ENGINE_INIT)
+          onEventTranslated(MediaEventReasons.MEDIA_ENGINE_INIT)
           break
         case 1:
-          onEventTranslated(EventReasons.MEDIA_LOADING_PROGRESS)
-          onEventTranslated(EventReasons.MEDIA_DURATION_CHANGE)
+          onEventTranslated(MediaEventReasons.MEDIA_LOADING_PROGRESS)
+          onEventTranslated(MediaEventReasons.MEDIA_DURATION_CHANGE)
           break
         case 2:
-          onEventTranslated(EventReasons.MEDIA_LOADING_PROGRESS)
+          onEventTranslated(MediaEventReasons.MEDIA_LOADING_PROGRESS)
           break
         case 3:
-          onEventTranslated(EventReasons.MEDIA_LOADING_PROGRESS)
+          onEventTranslated(MediaEventReasons.MEDIA_LOADING_PROGRESS)
           break
         case 4:
-          onEventTranslated(EventReasons.MEDIA_LOADING_PROGRESS)
+          onEventTranslated(MediaEventReasons.MEDIA_LOADING_PROGRESS)
           break
       }
     })
 
     this.listenToMediaElementEvent('loadedmetadata', () => {
-      onEventTranslated(EventReasons.MEDIA_ENGINE_INIT)
-      onEventTranslated(EventReasons.MEDIA_LOADING_PROGRESS)
+      onEventTranslated(MediaEventReasons.MEDIA_ENGINE_INIT)
+      onEventTranslated(MediaEventReasons.MEDIA_LOADING_PROGRESS)
     })
 
     this.listenToMediaElementEvent('loadeddata', () => {
-      //onEventTranslated(EventReasons.MEDIA_ENGINE_INIT);
-      onEventTranslated(EventReasons.MEDIA_LOADING_PROGRESS)
+      //onEventTranslated(MediaEventReasons.MEDIA_ENGINE_INIT);
+      onEventTranslated(MediaEventReasons.MEDIA_LOADING_PROGRESS)
     })
 
     // We need the PLAY event to indicate the intent to play
@@ -150,51 +163,51 @@ export class MediaElementObserver {
 
     this.listenToMediaElementEvent('play', () => {
       if (mediaEl.autoplay) {
-        onEventTranslated(EventReasons.MEDIA_AUTO_PLAY)
+        onEventTranslated(MediaEventReasons.MEDIA_AUTO_PLAY)
       } else {
-        onEventTranslated(EventReasons.MEDIA_MANUAL_PLAY)
+        onEventTranslated(MediaEventReasons.MEDIA_MANUAL_PLAY)
       }
     })
 
     this.listenToMediaElementEvent('pause', () => {
-      onEventTranslated(EventReasons.MEDIA_PAUSE)
+      onEventTranslated(MediaEventReasons.MEDIA_PAUSE)
     })
 
     this.listenToMediaElementEvent('playing', () => {
-      onEventTranslated(EventReasons.MEDIA_LOADING_PROGRESS)
+      onEventTranslated(MediaEventReasons.MEDIA_LOADING_PROGRESS)
     })
 
     this.listenToMediaElementEvent('error', () => {
-      onEventTranslated(EventReasons.MEDIA_ERROR)
+      onEventTranslated(MediaEventReasons.MEDIA_ERROR)
     })
 
     this.listenToMediaElementEvent('seeking', () => {
-      onEventTranslated(EventReasons.MEDIA_SEEK)
+      onEventTranslated(MediaEventReasons.MEDIA_SEEK)
     })
 
     this.listenToMediaElementEvent('seeked', () => {
-      onEventTranslated(EventReasons.MEDIA_LOADING_PROGRESS)
+      onEventTranslated(MediaEventReasons.MEDIA_LOADING_PROGRESS)
     })
 
     this.listenToMediaElementEvent('timeupdate', () => {
-      //onEventTranslated(EventReasons.MEDIA_CLOCK_UPDATE
+      //onEventTranslated(MediaEventReasons.MEDIA_CLOCK_UPDATE
 
       // will only update if clock actually changed since last call
       this.onPollForClockUpdate_()
     })
 
     this.listenToMediaElementEvent('durationchange', () => {
-      onEventTranslated(EventReasons.MEDIA_DURATION_CHANGE)
+      onEventTranslated(MediaEventReasons.MEDIA_DURATION_CHANGE)
     })
 
     this.listenToMediaElementEvent('ended', () => {
-      onEventTranslated(EventReasons.MEDIA_END)
+      onEventTranslated(MediaEventReasons.MEDIA_END)
     })
 
     // The waiting event is fired when playback has stopped because of a temporary lack of data.
     // See https://developer.mozilla.org/en-US/docs/Web/Events/waiting
     this.listenToMediaElementEvent('waiting', () => {
-      onEventTranslated(EventReasons.MEDIA_BUFFER_UNDERRUN)
+      onEventTranslated(MediaEventReasons.MEDIA_BUFFER_UNDERRUN)
     })
 
     // The stalled event is fired when the user agent is trying to fetch media data,
@@ -248,7 +261,7 @@ export class MediaElementObserver {
   private onPollFrame_() {
     if (
       this.mediaEl.readyState > 0
-      && this.previousEventReason_ !== EventReasons.MEDIA_PAUSE
+      && this.previousEventReason_ !== MediaEventReasons.MEDIA_PAUSE
     ) {
       this.onPollForClockUpdate_()
     }
@@ -261,7 +274,7 @@ export class MediaElementObserver {
    */
   private onPollForClockUpdate_() {
     if (this.mediaEl.currentTime !== this.previousMediaTime_) {
-      this.onEventTranslated_(EventReasons.MEDIA_CLOCK_UPDATE)
+      this.onEventTranslated_(MediaEventReasons.MEDIA_CLOCK_UPDATE)
       this.previousMediaTime_ = this.mediaEl.currentTime
       return true
     }
