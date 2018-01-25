@@ -128,7 +128,7 @@ export class SourceBufferQueue {
   appendMediaSegment(segment: MediaSegment) {
     const start = segment.startTime
     const end = segment.endTime
-    const arrayBuffer = segment.arrayBuffer
+    const arrayBuffer = segment.buffer
     const timestampOffset = 0
 
     this.queue_.push({method: 'appendBuffer', start, end, arrayBuffer, timestampOffset})
