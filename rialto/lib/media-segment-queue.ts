@@ -29,16 +29,19 @@ export class MediaSegmentQueue extends Queue<MediaSegment> {
 
   /**
    * Traverse queue and fetches first segment that has no data yet
+   *
    */
   fetchNext(): Promise<MediaSegment> {
     for(let i = 0; i < this.size; i++) {
       const segment = this.get(i)
       if (!segment.hasBuffer) {
         const promise = segment.fetch()
-        promise.then((mediaSegment) => {
-          this.emit('fetch-next:done', mediaSegment)
+        promise.then(() => {
+          this.emit('fetch-next:done', segment)
+          return segment
         }).catch((err) => {
           this.emit('fetch-next:error', err)
+          return segment
         })
         this._nextFetchPromise = promise
         return promise
