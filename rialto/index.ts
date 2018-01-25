@@ -6,7 +6,7 @@ import {
   PlaybackSubStates
 } from './lib/playback-state-machine'
 import {MediaElementObserver} from './lib/media-element-observer'
-import {MediaSession} from './lib/media-session'
+import {MediaSession, MediaSessionHistoryItem} from './lib/media-session'
 import {MediaSegment} from './lib/media-segment'
 import {MediaSegmentQueue} from './lib/media-segment-queue'
 import {MediaLocator} from './lib/media-locator'
@@ -19,6 +19,7 @@ export {
   getLogger,
   MediaElementObserver,
   MediaSession,
+  MediaSessionHistoryItem,
   MediaLocator,
   MediaSegment,
   MediaSegmentQueue,
