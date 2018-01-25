@@ -11,7 +11,15 @@
 
 .session-history {
   width: 60%;
-  margin: auto
+  margin: auto;
+}
+
+.session-history ul {
+  height: 8em;
+  overflow-y: scroll;
+  border: 1px solid gray;
+  font-family: "Lucida Console", Monaco, monospace;
+  font-size: 1em;
 }
 
 .session-history h2 {
