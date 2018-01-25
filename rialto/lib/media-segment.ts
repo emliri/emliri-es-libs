@@ -5,6 +5,12 @@ import {XHR, XHRMethod, XHRResponseType, XHRState, XHRStatusCategory, ByteRange}
 import {mediaCacheInstance} from './media-cache'
 import {MediaLocator} from './media-locator'
 
+import {getLogger} from './logger'
+
+const {
+  log
+} = getLogger('media-segment')
+
 /**
  * @fires fetch:aborted
  * @fires fetch:progress
