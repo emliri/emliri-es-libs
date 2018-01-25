@@ -1,3 +1,6 @@
+
+// TODO: Move to Objec-TS long-term
+
 const stringProtoPadEnd = import('string.prototype.padend')
 
 export abstract class Polyfill {
@@ -38,11 +41,17 @@ export class StringPadEndPolyfill extends Polyfill {
 
 export class PlayReturnsPromisePolyfill extends Polyfill {
   static install() {
+
+    // DOM ?
+    if (!window || !window.document) {
+      return
+    }
+
     /**
      * All modern browsers except Edge return a promise from audio/video
      * elements play() method.
      */
-    const playReturnsNoPromise = !document.createElement('video').play()
+    const playReturnsNoPromise = !window.document.createElement('video').play()
 
     if (playReturnsNoPromise) {
       const originalPlay = HTMLMediaElement.prototype.play
