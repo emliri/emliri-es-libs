@@ -1,4 +1,4 @@
-import {PlaybackStateMachine, PlaybackStateMachineEvents, PlaybackStateMachineTransitionReasons} from './playback-state-machine'
+import {PlaybackStateMachine, PlaybackStateMachineEvents, PlaybackStates, PlaybackStateMachineTransitionReasons} from './playback-state-machine'
 import {MediaElementObserver, MediaElement, MediaEventReasons} from './media-element-observer'
 
 import {getLogger} from './logger'
@@ -8,10 +8,6 @@ const {
   warn
 } = getLogger('MediaSession')
 
-export type MediaEventTranslationCallback = (MediaSession, MediaEventReasons) => void
-
-export type PlaybackStateMachineTransitionCallback = (MediaSession, PlaybackStateMachineTransitionReasons) => void
-
 type StateChangeHistoryItem = {
   state: string,
   reason: string,
@@ -19,25 +15,22 @@ type StateChangeHistoryItem = {
   time: Date
 }
 
+
+export type MediaEventTranslationCallback = (MediaSession, MediaEventReasons) => void
+
+export type PlaybackStateMachineTransitionCallback = (MediaSession, PlaybackStateMachineTransitionReasons) => void
+
+export enum MediaElementSubclass {
+  AUDIO = 'audio',
+  VIDEO = 'video'
+}
+
 export class MediaSession {
 
-  static get Subclasses() {
-    return {
-      AUDIO: 'audio',
-      VIDEO: 'video'
-    }
-  }
-
-  static createDOMMediaElement(subclass) {
+  static createDOMMediaElement(subclass: MediaElementSubclass) {
     if (!window || !window.document) {
       throw new Error('Can not create DOM element when no window/document exist in scope')
     }
-
-    if (subclass !== 'audio'
-            || subclass !== 'video') {
-      throw new Error('Invalid subclass value for DOM media element:' + subclass)
-    }
-
     return window.document.createElement(subclass)
   }
 
@@ -47,13 +40,17 @@ export class MediaSession {
   private playbackStateMachine_: PlaybackStateMachine;
   private mediaElObserver_: MediaElementObserver;
 
-  private _previousState: string
-  private _currentState: string
+  private _previousState: string = PlaybackStates.NULL
+  private _currentState: string = PlaybackStates.NULL
 
   private _stateChangeHistory: StateChangeHistoryItem[]
   private _eventHistory: string[]
 
-  private _sessionClockData: any
+  private _sessionClockData: {
+    time: number,
+    frame: number,
+    updateEventCount: number
+  }
 
   constructor(iHtml5MediaElement: MediaElement,
     onMediaElementEventTranslatedCb: MediaEventTranslationCallback,
@@ -157,7 +154,7 @@ export class MediaSession {
 
     const state = mediaSession.mediaPlaybackState
 
-    this._previousState = this._currentState
+    const previousState = this._previousState = this._currentState
     this._currentState = state;
 
     const previousStateChangeHistoryItem = this._stateChangeHistory[this._stateChangeHistory.length - 1]
@@ -173,7 +170,7 @@ export class MediaSession {
 
     const time = new Date()
     const timeString = `${time.toLocaleTimeString()} + ${time.getMilliseconds()}`
-    const logText = `[${timeString}] | New state: ${state}, transition reason: ${reason}`
+    const logText = `[${timeString}] | State: ${previousState} => ${state} | Reason: ${reason}`
 
     const item = {
       time,
