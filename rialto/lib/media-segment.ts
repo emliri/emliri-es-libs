@@ -1,12 +1,19 @@
 import {EventEmitter} from 'eventemitter3'
 
+import {XHR, XHRMethod, XHRResponseType, XHRState, XHRStatusCategory, ByteRange} from './xhr'
+
 import {mediaCacheInstance} from './media-cache'
 import {MediaLocator} from './media-locator'
 
-type AbortController = {
-  abort: () => void
-}
-
+/**
+ * @fires fetch:aborted
+ * @fires fetch:progress
+ * @fires fetch:errored
+ * @fires fetch:succeeded
+ *
+ * @fires buffer:set
+ * @fires buffer:clear
+ */
 export class MediaSegment extends EventEmitter {
 
     cached: boolean;
@@ -14,10 +21,12 @@ export class MediaSegment extends EventEmitter {
     private locator_: MediaLocator;
     private mimeType_: string;
     private ab_: ArrayBuffer;
-    private fetchPromise_: Promise<Response>;
-    private abortCtrl_?: AbortController;
     private abortedCnt_: number;
     private fetchAttemptCnt_: number;
+    private xhr_: XHR = null;
+    private fetchLatency_: number = NaN;
+    private fetchResolve_: (ms: MediaSegment) => void = null
+    private fetchReject_: (e: Error) => void = null
 
     constructor(locator: MediaLocator, cached = false) {
       super()
@@ -25,125 +34,139 @@ export class MediaSegment extends EventEmitter {
       this.cached = cached
       this.locator_ = locator
       this.mimeType_ = null
-      this.fetchPromise_ = null
-      this.abortCtrl_ = null
       this.ab_ = null
+      this.xhr_ = null
 
       this.abortedCnt_ = 0
       this.fetchAttemptCnt_ = 0
     }
 
-    getUrl() {
+    getUrl(): string {
       return this.uri
     }
 
-    setArrayBuffer(ab) {
+    setBuffer(ab): void {
       this.ab_ = ab
-      this.emit('setarraybuffer')
+      this.emit('buffer:set')
     }
 
-    clearArrayBuffer(ab) {
+    clearBuffer(ab): void {
       this.ab_ = null
-      this.emit('cleararraybuffer')
-    }
-
-    hasArrayBuffer(ab) {
-      this.ab_ !== null
+      this.emit('buffer:clear')
     }
 
     decrypt() {
       //
     }
 
-    fetch(retries, retryDelayMs) {
+    private onXHRCallback_(xhr: XHR, isProgressUpdate: boolean) {
 
+      if (isProgressUpdate) {
+        this.emit('fetch:progress', xhr)
+        return
+      }
+
+      if (xhr.hasBeenAborted) {
+        this.emit('fetch:aborted', xhr)
+
+        this.fetchReject_(new Error('Fetching media segment was aborted'))
+      }
+
+      if (xhr.hasErrored) {
+        this.emit('fetch:errored', xhr)
+
+        this.fetchReject_(xhr.error)
+      }
+
+      if (xhr.xhrState === XHRState.DONE) {
+        if (xhr.getStatusCategory() === XHRStatusCategory.SUCCESS) {
+          this.setBuffer(xhr.responseData)
+          this.fetchResolve_(this)
+          this.emit('fetch:succeeded', xhr)
+        }
+
+        this.fetchLatency_ = xhr.secondsUntilDone
+
+        // reset fetch promise hooks
+        this.fetchReject_ = null
+        this.fetchResolve_ = null
+
+        // XHR object is done and over, let's get rid of it
+        this.xhr_ = null
+
+      } else if (xhr.xhrState === XHRState.LOADING) {
+        this.fetchLatency_ = xhr.secondsUntilLoading
+      } else if (xhr.xhrState === XHRState.HEADERS_RECEIVED) {
+        this.fetchLatency_ = xhr.secondsUntilHeaders
+      } else if (xhr.xhrState === XHRState.OPENED) {
+        //
+      }
+    }
+
+    fetch(): Promise<MediaSegment> {
       this.fetchAttemptCnt_++
 
-      /*
-      var headers = new Headers()
-      var abortCtrl = new AbortController()
-
-      if (this.byteRange) {
-        headers.append('Byte-Range', this.byteRange.from +  '-' + this.byteRange.to)
-      }
-
-      var initOptions = {
-        method: 'GET',
-        headers,
-        //mode: 'cors',
-        //cache: 'default',
-        signal: abortCtrl.signal
-      }
-
-      this.abortCtrl_  = abortCtrl
-      this.fetchPromise_ = fetch(this.getUrl(), initOptions).then((response) => {
-
-        if(!response.ok) {
-          throw new Error('Response status not OK: ' + response.status)
-        }
-
-        return response.arrayBuffer()
-
-      }).then((ab) => {
-        this.setArrayBuffer(ab)
-        this.emit('fetchsuccess')
-      }).catch((error) => {
-        if (retries > 0) {
-          setTimeout(() => {
-            this.fetch(--retries, retryDelayMs)
-          }, retryDelayMs)
-        } else {
-          this.emit('fetcherror', error)
-        }
+      const fetchPromise = new Promise<MediaSegment>((resolve, reject) => {
+        this.fetchResolve_ = resolve
+        this.fetchReject_ = reject
       })
-      */
 
+      const xhr = this.xhr_ = new XHR(
+        this.getUrl(),
+        this.onXHRCallback_.bind(this),
+        XHRMethod.GET,
+        XHRResponseType.ARRAY_BUFFER
+      )
+
+      return fetchPromise
     }
 
     abort() {
-      if (!this.abortCtrl_) {
-        throw new Error('can not abort, no fetch seems to be happening or already aborted')
-      }
       this.abortedCnt_++
-      this.abortCtrl_.abort()
-      this.abortCtrl_ = null
-      this.fetchPromise_ = null
-      this.emit('abort')
+      this.xhr_.abort()
     }
 
-    get arrayBuffer() {
+    get hasBuffer(): boolean {
+      return this.ab_ !== null
+    }
+
+    get buffer(): ArrayBuffer {
       return this.ab_
     }
 
-    get timesAborted() {
+    get timesAborted(): number {
       return this.abortedCnt_
     }
 
-    get timesFetchAttempted() {
-      return this.fetchAttemptCnt_++
+    get timesFetchAttempted(): number {
+      return this.fetchAttemptCnt_
     }
 
-    get isFetching() {
-      return !!this.fetchPromise_
+    get isFetching(): boolean {
+      return !! this.xhr_
     }
 
-    get mimeType() {
+    get mimeType(): string {
       return this.mimeType_
     }
 
-    get byteRange() {
+    get byteRange(): ByteRange {
       return this.locator_.byteRange
     }
 
-    get uri() {
+    get uri(): string {
       return this.locator_.uri
     }
 
-    get startTime() {
+    get startTime(): number {
       return this.locator_.startTime
     }
 
-    get endTime() {
+    get endTime(): number {
       return this.locator_.endTime
+    }
+
+    get fetchLatency(): number {
+      return this.fetchLatency_
     }
 }
