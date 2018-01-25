@@ -177,7 +177,10 @@ export class MediaElementObserver {
     })
 
     this.listenToMediaElementEvent('timeupdate', () => {
-      onEventTranslated(EventReasons.MEDIA_CLOCK_UPDATE)
+      //onEventTranslated(EventReasons.MEDIA_CLOCK_UPDATE
+
+      // will only update if clock actually changed since last call
+      this.onPollForClockUpdate_()
     })
 
     this.listenToMediaElementEvent('durationchange', () => {
@@ -247,10 +250,21 @@ export class MediaElementObserver {
       this.mediaEl.readyState > 0
       && this.previousEventReason_ !== EventReasons.MEDIA_PAUSE
     ) {
-      if (this.mediaEl.currentTime !== this.previousMediaTime_) {
-        this.onEventTranslated_(EventReasons.MEDIA_CLOCK_UPDATE)
-        this.previousMediaTime_ = this.mediaEl.currentTime
-      }
+      this.onPollForClockUpdate_()
     }
+  }
+
+  /**
+   * NOTE: we may want to move out of the function triggering the event itself.
+   *
+   * @returns {boolean}
+   */
+  private onPollForClockUpdate_() {
+    if (this.mediaEl.currentTime !== this.previousMediaTime_) {
+      this.onEventTranslated_(EventReasons.MEDIA_CLOCK_UPDATE)
+      this.previousMediaTime_ = this.mediaEl.currentTime
+      return true
+    }
+    return false
   }
 }
