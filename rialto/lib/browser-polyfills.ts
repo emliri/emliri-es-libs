@@ -6,12 +6,27 @@ export abstract class Polyfill {
   static get collection(): (typeof Polyfill)[] {
     return [
       PlayReturnsPromisePolyfill,
-      StringPadEndPolyfill
+      StringPadEndPolyfill,
+      ArrayLastPolyfill
     ]
   }
 
   static installCollection() {
     Polyfill.collection.forEach((polyfill) => polyfill.install())
+  }
+}
+
+export class ArrayLastPolyfill extends Polyfill {
+  static install() {
+    Array.prototype['last'] = function() {
+      return this[this.length - 1]
+    }
+    /*
+    Array.prototype['last'] = function() {
+      // more expensive but funny
+      return this.slice().reverse()[0]
+    }
+    */
   }
 }
 
