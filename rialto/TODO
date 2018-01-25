@@ -1,21 +1,29 @@
-- Session history into Session (from demo)
+
+- Buffered range watcher !!!
+
+- Cache!
+
+- DASH demo (https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd)
+
+- Display performance metrics
 
 - Demo with webcam
 
-- Clock FPS slider
-
 - Buffering/Seeking waiting animation
 
-- Display performance metrics
+- Audio fade-in/out
+
+
+- Audio-out VU-meter, FFT
+
+- Canvas rendering (+BBC stuff)
+
 
 - Display buffer fill
 
 - Frame-precision seek
 
-- DASH demo
+- Clock FPS slider
 
 - Decibel volume
 
-- Audio-out VU-meter, FFT
-
-- Canvas rendering (+BBC stuff)
