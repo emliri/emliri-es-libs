@@ -6,7 +6,7 @@ import {getLogger} from './logger'
 const {
   log,
   warn
-} = getLogger('MediaSession')
+} = getLogger('media-session')
 
 type StateChangeHistoryItem = {
   state: string,
