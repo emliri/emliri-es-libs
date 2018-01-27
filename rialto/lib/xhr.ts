@@ -6,6 +6,18 @@
 
 const PROGRESS_UPDATES_ENABLED = true
 
+const createXHRHeadersMapFromString = function(headers): object {
+  const arr = headers.trim().split(/[\r\n]+/);
+  const map = {};
+  arr.forEach(function (line) {
+    var parts = line.split(': ');
+    var header = parts.shift();
+    var value = parts.join(': ');
+    map[header] = value;
+  });
+  return map
+}
+
 export type XHRHeader = [string, string]
 
 export type XHRHeaders = XHRHeader[]
@@ -82,7 +94,7 @@ export class ByteRange {
     this.total = total
   }
 
-  toHttpHeaderValue() {
+  toHttpHeaderValue(): string {
     if (isNaN(this.total)) {
       return `bytes ${this.from}-${this.to}/*`
     } else {
@@ -327,16 +339,7 @@ export class XHR {
       this._timeUntilHeaders = this.getSecondsSinceCreated()
 
       const headers = xhr.getAllResponseHeaders()
-      const arr = headers.trim().split(/[\r\n]+/);
-      const map = {};
-      arr.forEach(function (line) {
-        var parts = line.split(': ');
-        var header = parts.shift();
-        var value = parts.join(': ');
-        map[header] = value;
-      });
-      // assign result
-      this._responseHeadersMap = map
+      this._responseHeadersMap = createXHRHeadersMapFromString(headers)
       break;
     case XMLHttpRequest.LOADING:
       this._timeUntilLoading = this.getSecondsSinceCreated()

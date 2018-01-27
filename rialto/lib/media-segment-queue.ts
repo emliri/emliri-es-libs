@@ -1,5 +1,7 @@
 import {MediaSegment} from './media-segment'
 
+import {Resource} from './resource'
+
 import {Queue} from './queue'
 
 /**
@@ -9,7 +11,7 @@ import {Queue} from './queue'
  */
 export class MediaSegmentQueue extends Queue<MediaSegment> {
 
-  private _nextFetchPromise: Promise<MediaSegment>
+  private _nextFetchPromise: Promise<Resource>
 
   constructor() {
     super()
@@ -31,7 +33,7 @@ export class MediaSegmentQueue extends Queue<MediaSegment> {
    * Traverse queue and fetches first segment that has no data yet
    *
    */
-  fetchNext(): Promise<MediaSegment> {
+  fetchNext(): Promise<Resource> {
     for(let i = 0; i < this.size; i++) {
       const segment = this.get(i)
       if (!segment.hasBuffer) {
