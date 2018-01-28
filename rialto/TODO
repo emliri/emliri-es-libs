@@ -13,6 +13,8 @@
 
 - Audio fade-in/out
 
+- Base EventDispather-object ? / Global event/message bus?
+
 
 - Audio-out VU-meter, FFT
 
