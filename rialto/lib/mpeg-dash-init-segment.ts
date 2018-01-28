@@ -11,7 +11,7 @@ export class MpegDashInitSegment extends Resource {
   sidx: MpegDashSidx
 
   fromMpd(mpd: MpegDashMpd) {
-    return new MpegDashInitSegment(mpd.initSegmentUrl, mpd.initSegmentByteRange)
+    return new MpegDashInitSegment(mpd.initSegment.getUrl(), mpd.initSegment.byteRange)
   }
 
   fetch(): Promise<Resource> {

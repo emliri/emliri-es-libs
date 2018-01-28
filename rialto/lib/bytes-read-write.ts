@@ -1,7 +1,7 @@
 /**
  * @module
  *
- * Functions to read & write coded types from bytes
+ * Functions to read & write coded types from/to bytes buffers in memory
  *
  */
 
@@ -11,7 +11,6 @@ export const MAX_UINT_16 = 65536;
 export const readUint16 = (buffer: Uint8Array, offset: number): number => {
   const val = buffer[offset] << 8 |
               buffer[offset + 1];
-
   return val < 0 ? MAX_UINT_16 + val : val;
 }
 
