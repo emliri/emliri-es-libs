@@ -6,6 +6,7 @@ import {
   PlaybackStateMachine,
   PlaybackStateMachineTransitionReasons,
   PlaybackStates,
+  MpegDashMpd,
   getLogger
 } from '../index'
 
@@ -106,7 +107,7 @@ export namespace RialtoDemoApp {
 
   export const runMediaSegmentQueueExample = () => {
     const locator = new MediaLocator('v-0360p-0550k-vp9.webm')
-    const badLocator = new MediaLocator('v-0360p-0550k-vp9.webm__')
+    const badLocator = new MediaLocator('v-0360p-0550k-vp9.webm')
 
     const queue = new MediaSegmentQueue()
 
@@ -126,6 +127,14 @@ export namespace RialtoDemoApp {
     })
 
     queue.fetchAll()
+  }
+
+  export const runMPDResourceExample = () => {
+
+    const mpd = new MpegDashMpd('https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd')
+
+    mpd.fetch()
+
   }
 }
 
