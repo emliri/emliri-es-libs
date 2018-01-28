@@ -5,7 +5,7 @@ class URLMediaSource {
   private mimeType_: string;
 
   constructor(uriOrMediaSource: string | MediaSource, mimeType: string) {
-    if (typeof uriOrMediaSource === 'object') {
+    if (uriOrMediaSource instanceof MediaSource) {
       this.mediaSource_ = uriOrMediaSource
     } else if(typeof uriOrMediaSource === 'string') {
       this.url_ = uriOrMediaSource
