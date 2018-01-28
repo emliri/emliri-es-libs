@@ -18,7 +18,8 @@
     "ololog": "^1.1.84",
     "string.prototype.padend": "^3.0.0",
     "vue": "^2.5.13",
-    "vue-style-loader": "^3.0.3"
+    "vue-style-loader": "^3.0.3",
+    "xml-js": "^1.6.2"
   },
   "devDependencies": {
     "@types/chai": "^4.1.0",
