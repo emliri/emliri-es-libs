@@ -11,6 +11,21 @@ export enum ResourceEvents {
   FETCH_SUCCEEDED = 'fetch:succeeded'
 }
 
+export interface ParseableResource<ParsingResultType> extends Resource {
+  hasBeenParsed(): boolean
+
+  parse(): Promise<ParsingResultType>
+}
+
+export interface SegmentableResource<SegmentType> extends Resource {
+
+  getSegments(): Promise<SegmentType[]>
+}
+
+export interface DecryptableResource extends Resource {
+  decrypt(): Promise<DecryptableResource>
+}
+
 export class Resource extends EventEmitter {
 
   private uri_: string;

@@ -1,6 +1,4 @@
-
-
-import {Resource} from './resource'
+import {Resource, DecryptableResource, ParseableResource} from './resource'
 
 import {mediaCacheInstance} from './media-cache'
 import {MediaLocator} from './media-locator'
@@ -20,29 +18,34 @@ const {
  * @fires buffer:set
  * @fires buffer:clear
  */
-export class MediaSegment extends Resource {
+export class MediaSegment extends Resource implements DecryptableResource {
 
-    cached: boolean;
+  public cached: boolean;
 
-    private locator_: MediaLocator;
+  private locator_: MediaLocator;
 
-    constructor(locator: MediaLocator, cached = false) {
-      super(locator.uri, locator.byteRange)
+  constructor(locator: MediaLocator, mimeType: string = null, cached = false) {
+    super(locator.uri, locator.byteRange, mimeType)
 
-      this.cached = cached
-      this.locator_ = locator
-    }
+    this.cached = cached
 
-    decrypt() {
-      //
-    }
+    this.locator_ = locator
+  }
 
-    get startTime(): number {
-      return this.locator_.startTime
-    }
+  hasBeenParsed() { return false }
 
-    get endTime(): number {
-      return this.locator_.endTime
-    }
+  parse() { return Promise.resolve(this) }
+
+  decrypt() {
+    return null
+  }
+
+  get startTime(): number {
+    return this.locator_.startTime
+  }
+
+  get endTime(): number {
+    return this.locator_.endTime
+  }
 
 }

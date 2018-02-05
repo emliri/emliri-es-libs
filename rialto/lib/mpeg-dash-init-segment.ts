@@ -4,14 +4,14 @@ import {MpegIsoBmffBox} from './mpeg-isobmff-box'
 
 import {MpegDashSidx} from './mpeg-dash-sidx'
 
-import {MpegDashMpd} from './mpeg-dash-mpd'
+import {MpegDashMpd, MpegDashRepresentation} from './mpeg-dash-mpd'
 
 export class MpegDashInitSegment extends Resource {
 
   sidx: MpegDashSidx
 
-  fromMpd(mpd: MpegDashMpd) {
-    return new MpegDashInitSegment(mpd.initSegment.getUrl(), mpd.initSegment.byteRange)
+  fromMpd(dashRepresentation: MpegDashRepresentation) {
+    return new MpegDashInitSegment(dashRepresentation.baseURL, dashRepresentation.indexRange)
   }
 
   fetch(): Promise<Resource> {

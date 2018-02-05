@@ -1,33 +1,23 @@
-import {xml2js} from 'xml-js'
-
-import {Resource, ResourceEvents} from './resource'
+import {Resource, ResourceEvents, ParseableResource} from './resource'
 
 import {ByteRange} from './xhr'
 
 import {getLogger} from './logger'
 
+import {AdaptiveMediaPeriod} from './adaptive-media'
+
+import {XMLElement, XMLRootObject, parseXmlData} from './xml-parser'
+
 const {
   log
 } = getLogger('mpeg-dash-mpd')
 
-type XML2JsElement = {
-  attributes: any;
-  text: string;
-  name: string;
-  type: string;
-  elements: XML2JsElement[]
-}
-
-type XML2JsRawObject = {
-  elements: XML2JsElement[]
-}
-
-type MpegDashPeriod = {
+export type MpegDashPeriod = {
   id: string
   adaptationSets: MpegDashAdaptationSet[]
 }
 
-type MpegDashAdaptationSet = {
+export type MpegDashAdaptationSet = {
   id: string
   par: string
   contentType: string
@@ -40,7 +30,7 @@ type MpegDashAdaptationSet = {
   representations: MpegDashRepresentation[]
 }
 
-type MpegDashRepresentation = {
+export type MpegDashRepresentation = {
   id: string
   height: number;
   width: number;
@@ -53,7 +43,7 @@ type MpegDashRepresentation = {
   initializationRange: ByteRange
 }
 
-export const parseMpdRootElement = (mpdObj: XML2JsRawObject): XML2JsElement => {
+export const parseMpdRootElement = (mpdObj: XMLRootObject): XMLElement => {
   let res = null;
   if (mpdObj.elements) {
     mpdObj.elements.forEach((element) => {
@@ -65,7 +55,7 @@ export const parseMpdRootElement = (mpdObj: XML2JsRawObject): XML2JsElement => {
   return res
 }
 
-export const parsePeriods = (xmlParentElement: XML2JsElement): MpegDashPeriod[] => {
+export const parsePeriods = (xmlParentElement: XMLElement): MpegDashPeriod[] => {
   let periods: MpegDashPeriod[] = [];
 
   xmlParentElement.elements.forEach((element) => {
@@ -80,7 +70,7 @@ export const parsePeriods = (xmlParentElement: XML2JsElement): MpegDashPeriod[] 
   return periods
 }
 
-export const parseAdaptationSets = (xmlParentElement: XML2JsElement): MpegDashAdaptationSet[] => {
+export const parseAdaptationSets = (xmlParentElement: XMLElement): MpegDashAdaptationSet[] => {
   let adaptationSets: MpegDashAdaptationSet[] = [];
 
   xmlParentElement.elements.forEach((element) => {
@@ -103,7 +93,7 @@ export const parseAdaptationSets = (xmlParentElement: XML2JsElement): MpegDashAd
   return adaptationSets
 }
 
-export const parseRepresentations = (xmlParentElement: XML2JsElement): MpegDashRepresentation[] => {
+export const parseRepresentations = (xmlParentElement: XMLElement): MpegDashRepresentation[] => {
   let representations: MpegDashRepresentation[] = [];
 
   xmlParentElement.elements.forEach((element) => {
@@ -130,7 +120,7 @@ export const parseRepresentations = (xmlParentElement: XML2JsElement): MpegDashR
   return representations
 }
 
-export const parseSegments = (xmlParentElement: XML2JsElement, representation: MpegDashRepresentation) => {
+export const parseSegments = (xmlParentElement: XMLElement, representation: MpegDashRepresentation) => {
   xmlParentElement.elements.forEach((element) => {
     if (element.name === 'BaseURL') {
       representation.baseURL = element.elements[0].text
@@ -144,25 +134,31 @@ export const parseSegments = (xmlParentElement: XML2JsElement, representation: M
   })
 }
 
-export class MpegDashMpd extends Resource {
+export class MpegDashMpd extends Resource implements ParseableResource<AdaptiveMediaPeriod[]> {
 
-  private _mpdObj: XML2JsRawObject = null
-  private _mpdRootEl: XML2JsElement = null
-
-  initSegment: Resource
+  private _mpdObj: XMLRootObject = null
+  private _mpdRootEl: XMLElement = null
+  private _parsed: boolean = false
+  private _periods: AdaptiveMediaPeriod[] = null
 
   mediaPresentationDuration: string
-
   minBufferTime: string
-
   profiles: string
-
   type: string
-
   periods: MpegDashPeriod[] = null
 
   constructor(uri) {
     super(uri)
+  }
+
+  hasBeenParsed() {
+    return this._parsed
+  }
+
+  getSegments() {
+    if (!this.hasBeenParsed()) {
+      return null
+    }
   }
 
   parse() {
@@ -174,14 +170,13 @@ export class MpegDashMpd extends Resource {
     const text = String.fromCharCode.apply(null, new Uint8Array(buf));
 
     // parse XML
-    const mpdObj: XML2JsRawObject = xml2js(text, {
-      compact: false
-    })
+    const mpdObj: XMLRootObject = parseXmlData(text)
 
     log('data parsed to raw object:', mpdObj)
+
     this._mpdObj = mpdObj
 
-    const mpdRootEl: XML2JsElement = parseMpdRootElement(mpdObj)
+    const mpdRootEl: XMLElement = parseMpdRootElement(mpdObj)
     if (!mpdRootEl) {
       throw new Error('Could not find MPD XML element in raw data, bad URL or response?')
     }
@@ -197,6 +192,10 @@ export class MpegDashMpd extends Resource {
     this.periods = periods
 
     log(this)
+
+    this._parsed = true
+
+    return Promise.resolve(this._periods)
   }
 
   fetch(): Promise<Resource> {
@@ -207,5 +206,22 @@ export class MpegDashMpd extends Resource {
 
       return this
     })
+  }
+
+  private _createPeriods() {
+    const periods: AdaptiveMediaPeriod[] = []
+
+    this.periods.forEach((period) => {
+
+
+      periods.push(new AdaptiveMediaPeriod())
+
+      /*
+      segments.push(new MediaSegment(
+        new MediaLocator()
+      ))
+      */
+    })
+
   }
 }
