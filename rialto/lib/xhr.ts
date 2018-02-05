@@ -4,6 +4,8 @@
  *
  */
 
+import {ByteRange} from './byte-range'
+
 const PROGRESS_UPDATES_ENABLED = true
 
 const createXHRHeadersMapFromString = function(rawHeaders: string): object {
@@ -64,9 +66,10 @@ export enum XHRStatusCategory {
 export type XHRCallbackFunction = (xhr: XHR, isProgressUpdate: boolean) => void
 
 /**
- * This class allows to perform requests, deal with their outcome and intermediate states.
  *
  * Thin wrapper to keep state of one XHR.
+ *
+ * This class allows to perform requests, deal with their outcome and intermediate states.
  *
  * Requests are being sent out directly on construction (there is no state in between creating and sending a request).
  *
@@ -83,39 +86,6 @@ export type XHRCallbackFunction = (xhr: XHR, isProgressUpdate: boolean) => void
  * @class
  * @constructor
  */
-export class ByteRange {
-
-  from: number;
-  to: number;
-  total: number;
-
-  /**
-   * Assumes input like `"0-99"`
-   * @param rawByteRange
-   */
-  static fromString(rawByteRange: string) {
-    if (typeof rawByteRange !== 'string') {
-      throw new Error('Raw byte-range is not a string')
-    }
-    const parsedRawBr: number[] = rawByteRange.split('-').map((v) => Number(v))
-    return new ByteRange(parsedRawBr[0], parsedRawBr)
-  }
-
-  constructor(from = 0, to, total = NaN) {
-    this.from = from
-    this.to = to
-    this.total = total
-  }
-
-  toHttpHeaderValue(): string {
-    if (isNaN(this.total)) {
-      return `bytes ${this.from}-${this.to}/*`
-    } else {
-      return `bytes ${this.from}-${this.to}/${this.total}`
-    }
-  }
-}
-
 export class XHR {
 
   private _xhrCallback: XHRCallbackFunction

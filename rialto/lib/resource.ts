@@ -10,9 +10,10 @@ import {
   XHRMethod,
   XHRResponseType,
   XHRState,
-  XHRStatusCategory,
-  ByteRange
+  XHRStatusCategory
 } from './xhr'
+
+import {ByteRange} from './byte-range'
 
 export enum ResourceEvents {
   BUFFER_SET = 'buffer:set',

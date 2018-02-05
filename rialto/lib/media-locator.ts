@@ -1,4 +1,4 @@
-import {ByteRange} from './xhr'
+import {ByteRange} from './byte-range'
 
 import {URLObject, resolveUri} from './url'
 
