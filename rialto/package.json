@@ -17,6 +17,8 @@
     "file-loader": "^1.1.6",
     "ololog": "^1.1.84",
     "string.prototype.padend": "^3.0.0",
+    "url-polyfill": "^1.0.11",
+    "url-toolkit": "^2.1.4",
     "vue": "^2.5.13",
     "vue-style-loader": "^3.0.3",
     "xml-js": "^1.6.2"

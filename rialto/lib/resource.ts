@@ -1,6 +1,18 @@
 import {EventEmitter} from 'eventemitter3'
 
-import {XHR, XHRMethod, XHRResponseType, XHRState, XHRStatusCategory, ByteRange} from './xhr'
+import {
+  resolveUri,
+  URLObject
+} from './url'
+
+import {
+  XHR,
+  XHRMethod,
+  XHRResponseType,
+  XHRState,
+  XHRStatusCategory,
+  ByteRange
+} from './xhr'
 
 export enum ResourceEvents {
   BUFFER_SET = 'buffer:set',
@@ -29,6 +41,7 @@ export interface DecryptableResource extends Resource {
 export class Resource extends EventEmitter {
 
   private uri_: string;
+  private baseUri_: string;
   private byteRange_: ByteRange;
   private ab_: ArrayBuffer;
   private abortedCnt_: number;
@@ -40,10 +53,18 @@ export class Resource extends EventEmitter {
   private fetchResolve_: (ms: Resource) => void = null
   private fetchReject_: (e: Error) => void = null
 
-  constructor(uri: string, byteRange: ByteRange = null, mimeType: string = null) {
+  /**
+   *
+   * @param uri may be relative or absolute
+   * @param byteRange
+   * @param baseUri
+   * @param mimeType
+   */
+  constructor(uri: string, byteRange: ByteRange = null, baseUri: string = null, mimeType: string = null) {
     super()
 
     this.uri_ = uri
+    this.baseUri_ = baseUri
     this.byteRange_ = byteRange
     this.mimeType_ = mimeType
 
@@ -57,6 +78,10 @@ export class Resource extends EventEmitter {
 
   get uri(): string {
     return this.uri_
+  }
+
+  get baseUri(): string {
+    return this.baseUri
   }
 
   get byteRange(): ByteRange {
@@ -91,9 +116,19 @@ export class Resource extends EventEmitter {
     return this.fetchLatency_
   }
 
-  getUrl(): string {
+  /**
+   * Tries to resolve the resource's URI to an absolute URL,
+   * with the given `baseUri` at construction or the optional argument
+   * (which overrides the base of this instance for this resolution, but does not overwrite it).
+   * Create a new resource object to do that.
+   */
+  getUrl(base?: string): string {
     // TODO: resolve here
-    return this.uri_
+    return resolveUri(this.uri, base ? base : this.baseUri_)
+  }
+
+  getURLObject(): URLObject {
+    return new URLObject(this.getUrl())
   }
 
   setBuffer(ab): void {

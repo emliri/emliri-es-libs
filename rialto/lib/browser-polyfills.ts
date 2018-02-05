@@ -3,6 +3,8 @@
 
 const stringProtoPadEnd = import('string.prototype.padend')
 
+require('url-polyfill')
+
 export abstract class Polyfill {
   static install() { throw new Error('Abstract polyfill, implement install method') }
 
@@ -16,6 +18,12 @@ export abstract class Polyfill {
 
   static installCollection() {
     Polyfill.collection.forEach((polyfill) => polyfill.install())
+  }
+}
+
+export class URLPolyfill extends Polyfill {
+  static install() {
+    //
   }
 }
 

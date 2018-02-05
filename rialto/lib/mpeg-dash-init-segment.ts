@@ -1,4 +1,4 @@
-import {Resource, ResourceEvents} from './resource'
+import {Resource, ResourceEvents, ParseableResource} from './resource'
 
 import {MpegIsoBmffBox} from './mpeg-isobmff-box'
 
@@ -6,13 +6,11 @@ import {MpegDashSidx} from './mpeg-dash-sidx'
 
 import {MpegDashMpd, MpegDashRepresentation} from './mpeg-dash-mpd'
 
-export class MpegDashInitSegment extends Resource {
+export class MpegDashInitSegment extends Resource implements ParseableResource<MpegIsoBmffBox[]> {
 
-  sidx: MpegDashSidx
+  moov: MpegIsoBmffBox = null
 
-  fromMpd(dashRepresentation: MpegDashRepresentation) {
-    return new MpegDashInitSegment(dashRepresentation.baseURL, dashRepresentation.indexRange)
-  }
+  sidx: MpegDashSidx = null
 
   fetch(): Promise<Resource> {
     return super.fetch().then((r: Resource) => {
@@ -25,5 +23,11 @@ export class MpegDashInitSegment extends Resource {
 
       return this;
     })
+  }
+
+  hasBeenParsed() { return !! (this.sidx || this.moov) }
+
+  parse() {
+    return Promise.resolve([this.sidx, this.moov])
   }
 }

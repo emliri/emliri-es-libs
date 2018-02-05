@@ -6,13 +6,14 @@
 
 const PROGRESS_UPDATES_ENABLED = true
 
-const createXHRHeadersMapFromString = function(headers): object {
-  const arr = headers.trim().split(/[\r\n]+/);
-  const map = {};
+const createXHRHeadersMapFromString = function(rawHeaders: string): object {
+  const arr = rawHeaders.trim().split(/[\r\n]+/);
+  // create an object without a prototype (a plain vanilla "dictionary")
+  const map = Object.create(null);
   arr.forEach(function (line) {
-    var parts = line.split(': ');
-    var header = parts.shift();
-    var value = parts.join(': ');
+    const parts = line.split(': ');
+    const header = parts.shift();
+    const value = parts.join(': ');
     map[header] = value;
   });
   return map
@@ -87,6 +88,18 @@ export class ByteRange {
   from: number;
   to: number;
   total: number;
+
+  /**
+   * Assumes input like `"0-99"`
+   * @param rawByteRange
+   */
+  static fromString(rawByteRange: string) {
+    if (typeof rawByteRange !== 'string') {
+      throw new Error('Raw byte-range is not a string')
+    }
+    const parsedRawBr: number[] = rawByteRange.split('-').map((v) => Number(v))
+    return new ByteRange(parsedRawBr[0], parsedRawBr)
+  }
 
   constructor(from = 0, to, total = NaN) {
     this.from = from

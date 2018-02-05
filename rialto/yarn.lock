@@ -1512,10 +1512,6 @@ dom-serializer@0:
     domelementtype "~1.1.1"
     entities "~1.1.1"
 
-dom-walk@^0.1.0:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/dom-walk/-/dom-walk-0.1.1.tgz#672226dc74c8f799ad35307df936aba11acd6018"
-
 domain-browser@^1.1.1:
   version "1.1.7"
   resolved "https://registry.yarnpkg.com/domain-browser/-/domain-browser-1.1.7.tgz#867aa4b093faa05f1de08c06f4d7b21fdf8698bc"
@@ -2344,13 +2340,6 @@ glob@^7.0.0, glob@^7.0.3, glob@^7.0.5, glob@^7.0.6, glob@^7.1.1, glob@^7.1.2, gl
   dependencies:
     inherits "2"
     minimatch "0.3"
-
-global@^4.3.0:
-  version "4.3.2"
-  resolved "https://registry.yarnpkg.com/global/-/global-4.3.2.tgz#e76989268a6c74c38908b1305b10fc0e394e9d0f"
-  dependencies:
-    min-document "^2.19.0"
-    process "~0.5.1"
 
 globals@^11.0.1:
   version "11.1.0"
@@ -3603,12 +3592,6 @@ mimic-fn@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/mimic-fn/-/mimic-fn-1.1.0.tgz#e667783d92e89dbd342818b5230b9d62a672ad18"
 
-min-document@^2.19.0:
-  version "2.19.0"
-  resolved "https://registry.yarnpkg.com/min-document/-/min-document-2.19.0.tgz#7bd282e3f5842ed295bb748cdd9f1ffa2c824685"
-  dependencies:
-    dom-walk "^0.1.0"
-
 minimalistic-assert@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/minimalistic-assert/-/minimalistic-assert-1.0.0.tgz#702be2dda6b37f4836bcb3f5db56641b64a1d3d3"
@@ -3671,13 +3654,6 @@ mkdirp@0.5.x, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.0, mkd
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-0.5.1.tgz#30057438eac6cf7f8c4767f38648d6697d75c903"
   dependencies:
     minimist "0.0.8"
-
-mpd-parser@^0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/mpd-parser/-/mpd-parser-0.2.1.tgz#dcf234f459c82bb7aff5ae8e87b1fbfe3a778f2a"
-  dependencies:
-    global "^4.3.0"
-    url-toolkit "^2.1.1"
 
 ms@2.0.0:
   version "2.0.0"
@@ -4680,10 +4656,6 @@ process-nextick-args@~1.0.6:
 process@^0.11.10:
   version "0.11.10"
   resolved "https://registry.yarnpkg.com/process/-/process-0.11.10.tgz#7332300e840161bda3e69a1d1d91a7d4bc16f182"
-
-process@~0.5.1:
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/process/-/process-0.5.2.tgz#1638d8a8e34c2f440a91db95ab9aeb677fc185cf"
 
 progress@^2.0.0:
   version "2.0.0"
@@ -6247,7 +6219,11 @@ url-parse@^1.1.8:
     querystringify "~1.0.0"
     requires-port "~1.0.0"
 
-url-toolkit@^2.1.1:
+url-polyfill@^1.0.11:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/url-polyfill/-/url-polyfill-1.0.11.tgz#f3a76d3795f42a459c2df4a1a69a5713c5cfa6d4"
+
+url-toolkit@^2.1.4:
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/url-toolkit/-/url-toolkit-2.1.4.tgz#e0dac60e5fdd50b8ac984307699e8b72439b3fd3"
 

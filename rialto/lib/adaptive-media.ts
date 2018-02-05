@@ -7,6 +7,7 @@ export type VideoInfo = {
 
 export type AudioInfo = {
   language: string
+  channels: number
 }
 
 export type TextInfo = {
@@ -19,6 +20,10 @@ export enum MediaTypeFlag {
   TEXT = 0b100
 }
 
+/**
+ * Human-readable `MediaTypeFlag`
+ * @param type
+ */
 export function getMediaTypeFlagName(type: MediaTypeFlag): string {
   switch(type) {
   case MediaTypeFlag.AUDIO: return 'audio'
@@ -28,7 +33,12 @@ export function getMediaTypeFlagName(type: MediaTypeFlag): string {
   }
 }
 
-export class MediaStream {
+/**
+ * Represents what people refer to as rendition, quality level or representation, or media playlist
+ *
+ * Contains an array of segments and the metadata in common about these.
+ */
+export class AdaptiveMedia {
 
   constructor(mediaEngine: AdaptiveMediaEngine = null) {
     this.mediaEngine = mediaEngine
@@ -36,7 +46,7 @@ export class MediaStream {
 
   mediaEngine: AdaptiveMediaEngine
   parent: AdaptiveMediaSet
-  segments: MediaSegment[]
+  segments: MediaSegment[] = []
   mimeType: string
   codecs: string
   bandwidth: number
@@ -44,6 +54,9 @@ export class MediaStream {
   audioInfo: AudioInfo
   textInfo: TextInfo
 
+  /**
+   * Activates/enables a certain stream
+   */
   activate() {
     if (this.mediaEngine) {
       return this.mediaEngine.activateMediaStream(this)
@@ -51,19 +64,29 @@ export class MediaStream {
   }
 }
 
-export class AdaptiveMediaSet {
+/**
+ * A set of media representations with a given combination of content-types (see flags)
+ */
+export class AdaptiveMediaSet extends Set<AdaptiveMedia> {
   parent: AdaptiveMediaPeriod
-  containedTypes: Set<MediaTypeFlag>
-  representations: MediaStream[]
+  containedTypes: Set<MediaTypeFlag> = new Set()
+
+  containsMediaType(type: MediaTypeFlag): boolean {
+    return this.containedTypes.has(type)
+  }
 }
 
+/**
+ * A queriable collection of sets
+ */
 export class AdaptiveMediaPeriod {
-  adaptiveMediaSets: AdaptiveMediaSet[]
+
+  sets: AdaptiveMediaSet[] = []
 
   filterByContainedMediaTypes(mediaTypeFlags: Set<MediaTypeFlag>,
     combined = false): AdaptiveMediaSet[] {
 
-    return this.adaptiveMediaSets.filter((mediaSet) => {
+    return this.sets.filter((mediaSet) => {
       let hasOne = false
       let hasAll = true
 
@@ -85,5 +108,5 @@ export interface AdaptiveMediaEngine {
 
   enableMediaSet(set: AdaptiveMediaSet)
 
-  activateMediaStream(stream: MediaStream): Promise<boolean>
+  activateMediaStream(stream: AdaptiveMedia): Promise<boolean>
 }
