@@ -3,6 +3,12 @@ import {
   utf8BytesToString
 } from './bytes-read-write'
 
+import {getLogger} from './logger'
+
+const {
+  log
+} = getLogger('mpeg-isobmff-box')
+
 /**
  *
  * Finds boxes in a data buffer given the hierarchical path.
@@ -41,19 +47,27 @@ export const findIsoBmffBoxes = function(
 
     if (type === path[0]) {
 
-      const box = new MpegIsoBmffBox(data, start, data.byteLength)
+      const box = new MpegIsoBmffBox(data, start, data.byteLength, type)
 
+      // we have reached the end of the search path
       if (path.length === 1) {
+        // append box to results
         boxes.push(box);
       } else {
+        // continue recursion
         subBoxes = findIsoBmffBoxes(box.data, path.slice(1), end);
+        // append all the results
         if (subBoxes.length) {
           Array.prototype.push.apply(boxes, subBoxes)
         }
       }
     }
+
+    // skip to end of box and try to continue
     i = end
   }
+
+  // log('result:', boxes)
 
   return boxes;
 }
@@ -72,10 +86,12 @@ export class MpegIsoBmffBox {
   data: Uint8Array = null;
   start: number = NaN;
   end: number = NaN;
+  type: string = null;
 
-  constructor(data: Uint8Array, start: number, end: number) {
+  constructor(data: Uint8Array, start: number, end: number, type: string = null) {
     this.data = data
     this.start = start
     this.end = end
+    this.type = type;
   }
 }

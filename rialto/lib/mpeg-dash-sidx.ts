@@ -9,14 +9,18 @@ import {
   findIsoBmffBoxes
 } from './mpeg-isobmff-box'
 
-export const parseSidxData = (data: Uint8Array): MpegDashSidx => {
+import {getLogger} from './logger'
 
-  /*
-  const moov = findIsoBmffBoxes(data, ['moov'])[0];
-  const moovEndOffset = moov ? moov.end : null; // we need this in case we need to chop of garbage of the end of current data
-  */
+const {
+  log
+} = getLogger('mpeg-dash-sidx')
 
-  let references: MpegDashSidxReference[];
+/**
+ * @param data Iso-ff binary data
+ * @param parsedSidx An existing box object instance to parse data into
+ * @returns {MpegDashSidx} A new or the passed object
+ */
+export const parseSidxData = (data: Uint8Array, parsedSidx: MpegDashSidx): MpegDashSidx => {
   let index = 0;
 
   const sidxBoxes = findIsoBmffBoxes(data, ['sidx']);
@@ -26,12 +30,15 @@ export const parseSidxData = (data: Uint8Array): MpegDashSidx => {
 
   const sidx: MpegIsoBmffBox = sidxBoxes[0]
 
-  const version = sidx.data[0];
+  index += 8
+
+  const version = sidx.data[index];
 
   // set initial offset, we skip the reference ID (not needed)
-  index = version === 0 ? 8 : 16;
+  index += version === 0 ? 8 : 16;
 
   const timescale = readUint32(sidx.data, index);
+
   index += 4;
 
   // TODO: parse earliestPresentationTime and firstOffset
@@ -44,15 +51,19 @@ export const parseSidxData = (data: Uint8Array): MpegDashSidx => {
   } else {
     index += 16;
   }
+
   // skip reserved
   index += 2;
 
   let startByte = sidx.end + firstOffset;
 
+  const references: MpegDashSidxReference[] = [];
   const referencesCount = readUint16(sidx.data, index);
+
   index += 2;
 
   for (let i = 0; i < referencesCount; i++) {
+
     let referenceIndex = index;
 
     const referenceInfo = readUint32(sidx.data, referenceIndex);
@@ -69,8 +80,8 @@ export const parseSidxData = (data: Uint8Array): MpegDashSidx => {
     const subsegmentDuration = readUint32(sidx.data, referenceIndex);
     referenceIndex += 4;
 
-    references.push(
-      {referenceSize,
+    references.push({
+      referenceSize,
       subsegmentDuration, // unscaled
       info: {
         duration: subsegmentDuration / timescale,
@@ -89,13 +100,14 @@ export const parseSidxData = (data: Uint8Array): MpegDashSidx => {
     index = referenceIndex;
   }
 
-  const parsedSidx = new MpegDashSidx(sidx)
-
+  parsedSidx = parsedSidx
   parsedSidx.earliestPresentationTime = earliestPresentationTime
   parsedSidx.timescale = timescale
   parsedSidx.version = version
   parsedSidx.referencesCount = referencesCount
   parsedSidx.references = references
+
+  log('parsed sidx data:', parsedSidx)
 
   return parsedSidx
 }
@@ -111,21 +123,15 @@ export type MpegDashSidxReference = {
 }
 
 export class MpegDashSidx extends MpegIsoBmffBox {
-
-  static fromBox(box: MpegIsoBmffBox) {
-    return parseSidxData(box.data)
-  }
-
   earliestPresentationTime: number;
   timescale: number;
   version: number;
-  referencesCount: number;
-  references: MpegDashSidxReference[]
+  referencesCount: number = 0;
+  references: MpegDashSidxReference[] = []
 
   constructor(box: MpegIsoBmffBox) {
     super(box.data, box.start, box.end)
 
-    this.referencesCount = 0
-    this.references = []
+    parseSidxData(box.data, this)
   }
 }

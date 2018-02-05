@@ -1,3 +1,7 @@
+/**
+ * For usage in a Node.js base env (like ts-node) @see https://www.npmjs.com/package/node-http-xhr
+ */
+
 import {EventEmitter} from 'eventemitter3'
 
 import {

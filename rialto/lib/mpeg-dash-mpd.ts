@@ -2,13 +2,13 @@ import {Resource, ResourceEvents, ParseableResource} from './resource'
 
 import {ByteRange} from './byte-range'
 
-import {getLogger} from './logger'
-
 import {AdaptiveMediaPeriod, AdaptiveMediaSet, AdaptiveMedia, MediaTypeFlag} from './adaptive-media'
 
 import {XMLElement, XMLRootObject, parseXmlData} from './xml-parser'
 
 import {MpegDashInitSegment} from './mpeg-dash-init-segment'
+
+import {getLogger} from './logger'
 
 const {
   log
@@ -147,14 +147,14 @@ export const parseSegments = (xmlParentElement: XMLElement, representation: Mpeg
     }
 
     if (representation.baseURL && representation.indexRange) {
-      log('creating index segment')
+      // log('creating index segment')
       representation.indexSegment =
         new MpegDashInitSegment(representation.baseURL, representation.indexRange, parentUrl)
     }
 
     if (representation.baseURL && representation.initializationRange) {
 
-      log('creating init segment')
+      // log('creating init segment')
 
       representation.initializationSegment =
         new MpegDashInitSegment(representation.baseURL, representation.initializationRange, parentUrl)
@@ -163,9 +163,6 @@ export const parseSegments = (xmlParentElement: XMLElement, representation: Mpeg
 }
 
 export const fetchInitializationSegments = (rep: MpegDashRepresentation): Promise<Resource[]> => {
-
-  log('fetching all the init data')
-
   return Promise.all([
     rep.initializationSegment && rep.initializationSegment.fetch(),
     rep.indexSegment && rep.indexSegment.fetch()
@@ -261,6 +258,8 @@ export class MpegDashMpd extends Resource implements ParseableResource<AdaptiveM
   }
 
   private _fetchAllIndexAndInitData(): Promise<Resource[]>[] {
+
+    log('fetching all the init data')
 
     const representationInitPromises: Promise<Resource[]>[] = []
 

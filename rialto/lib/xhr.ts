@@ -1,6 +1,8 @@
 /**
  * @author Stephan Hesse <disparat@gmail.com>
- * @module xhr An improvement over the standard XMLHttpRequest API (and with type-safety of course!)
+ * @module xhr An improvement over the standard XMLHttpRequest API (and with type-safety :)
+ *
+ * For usage in a Node.js base env (like ts-node) @see https://www.npmjs.com/package/node-http-xhr
  *
  */
 
@@ -140,7 +142,7 @@ export class XHR {
     xhr.onprogress = this.onProgress.bind(this)
 
     if (byteRange) {
-      log('set byte-range:', byteRange.toHttpHeaderValue(), byteRange.toString())
+      //log('set byte-range:', byteRange.toHttpHeaderValue(), byteRange.toString())
       if (this.enableContentRange) {
         xhr.setRequestHeader('Content-Range', byteRange.toHttpHeaderValue(true))
       }
