@@ -6,6 +6,12 @@
 
 import {ByteRange} from './byte-range'
 
+import {getLogger} from './logger'
+
+const {
+  log
+} = getLogger('xhr')
+
 const PROGRESS_UPDATES_ENABLED = true
 
 const createXHRHeadersMapFromString = function(rawHeaders: string): object {
@@ -103,6 +109,11 @@ export class XHR {
   private _timeUntilLoading: number = NaN;
   private _timeUntilDone: number = NaN;
 
+  /**
+   * Enables "Content-Range" request header from given `ByteRange` object in constructor
+   */
+  public enableContentRange: boolean = false;
+
   constructor(
     url: string,
     xhrCallback: XHRCallbackFunction = () => {},
@@ -129,7 +140,11 @@ export class XHR {
     xhr.onprogress = this.onProgress.bind(this)
 
     if (byteRange) {
-      xhr.setRequestHeader('Content-Range', byteRange.toHttpHeaderValue())
+      log('set byte-range:', byteRange.toHttpHeaderValue(), byteRange.toString())
+      if (this.enableContentRange) {
+        xhr.setRequestHeader('Content-Range', byteRange.toHttpHeaderValue(true))
+      }
+      xhr.setRequestHeader('Range', byteRange.toHttpHeaderValue(false))
     }
 
     if (headers) {
