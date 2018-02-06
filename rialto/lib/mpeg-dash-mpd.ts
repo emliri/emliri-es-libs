@@ -2,7 +2,11 @@ import {Resource, ResourceEvents, ParseableResource} from './resource'
 
 import {ByteRange} from './byte-range'
 
-import {AdaptiveMediaPeriod, AdaptiveMediaSet, AdaptiveMedia, MediaTypeFlag} from './adaptive-media'
+import {
+  MediaTypeFlag,
+} from './media-container-info'
+
+import {AdaptiveMediaPeriod, AdaptiveMediaSet, AdaptiveMedia} from './adaptive-media'
 
 import {XMLElement, XMLRootObject, parseXmlData} from './xml-parser'
 
@@ -11,7 +15,8 @@ import {MpegDashInitSegment} from './mpeg-dash-init-segment'
 import {getLogger} from './logger'
 
 const {
-  log
+  log,
+  warn
 } = getLogger('mpeg-dash-mpd')
 
 export type MpegDashPeriod = {
@@ -20,7 +25,9 @@ export type MpegDashPeriod = {
 }
 
 export type MpegDashSegment = {
-
+  uri: string,
+  range: ByteRange,
+  duration: number
 }
 
 export type MpegDashAdaptationSet = {
@@ -257,7 +264,7 @@ export class MpegDashMpd extends Resource implements ParseableResource<AdaptiveM
     })
   }
 
-  private _fetchAllIndexAndInitData(): Promise<Resource[]>[] {
+  private _fetchAllIndexAndInitData(): Promise<Resource[][]> {
 
     log('fetching all the init data')
 
@@ -269,16 +276,40 @@ export class MpegDashMpd extends Resource implements ParseableResource<AdaptiveM
       )
     })
 
-    return representationInitPromises
+    return Promise.all(representationInitPromises)
   }
 
   private _parseAllInitData() {
     this._forEachRepresentation((rep) => {
-      if (rep.initializationSegment) {
-        rep.initializationSegment.parse()
+      const initSeg = rep.initializationSegment
+      if (initSeg) {
+        initSeg.parse().then(() => {
+          //
+        })
       }
       if (rep.indexSegment) {
-        rep.indexSegment.parse()
+        const indexSeg = rep.indexSegment
+        if (indexSeg) {
+          indexSeg.parse().then(() => {
+            if (indexSeg.sidx) {
+
+              indexSeg.sidx.references.forEach((ref) => {
+
+                const dashSegment = {
+                  uri: indexSeg.baseUri,
+                  range: new ByteRange(ref.info.start, ref.info.end),
+                  duration: ref.info.duration
+                }
+
+                log('new dash segment:', dashSegment)
+
+                rep.segments.push(dashSegment)
+              })
+            } else {
+              warn('no sidx box parsed in index segment:', indexSeg.uri)
+            }
+          })
+        }
       }
     })
   }
@@ -303,13 +334,13 @@ export class MpegDashMpd extends Resource implements ParseableResource<AdaptiveM
 
         switch(mpegSet.contentType) {
         case 'audio':
-          set.containedTypes.add(MediaTypeFlag.AUDIO)
+          set.mediaContainerInfo.containedTypes.add(MediaTypeFlag.AUDIO)
           break;
         case 'video':
-          set.containedTypes.add(MediaTypeFlag.VIDEO)
+          set.mediaContainerInfo.containedTypes.add(MediaTypeFlag.VIDEO)
           break;
         case 'text':
-          set.containedTypes.add(MediaTypeFlag.TEXT)
+          set.mediaContainerInfo.containedTypes.add(MediaTypeFlag.TEXT)
           break;
         }
 
@@ -323,14 +354,14 @@ export class MpegDashMpd extends Resource implements ParseableResource<AdaptiveM
           stream.codecs = rep.codecs
           stream.audioInfo = {
             channels: 2,
-            language: set.containsMediaType(MediaTypeFlag.AUDIO) ? mpegSet.lang : null
+            language: set.mediaContainerInfo.containsMediaType(MediaTypeFlag.AUDIO) ? mpegSet.lang : null
           }
           stream.videoInfo = {
             width: rep.width,
             height: rep.height
           }
           stream.textInfo = {
-            language: set.containsMediaType(MediaTypeFlag.TEXT) ? mpegSet.lang : null
+            language: set.mediaContainerInfo.containsMediaType(MediaTypeFlag.TEXT) ? mpegSet.lang : null
           }
           stream.segments = []
 

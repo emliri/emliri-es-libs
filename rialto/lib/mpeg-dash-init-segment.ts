@@ -15,7 +15,6 @@ const {
 export class MpegDashInitSegment extends Resource implements ParseableResource<MpegIsoBmffBox[]> {
 
   moov: MpegIsoBmffBox = null
-
   sidx: MpegDashSidx = null
 
   fetch(): Promise<Resource> {
@@ -30,8 +29,7 @@ export class MpegDashInitSegment extends Resource implements ParseableResource<M
       const sidxBox = MpegIsoBmffBox.fromPath(new Uint8Array(this.buffer), ['sidx'])
       if (sidxBox) {
         log('found sidx box in', this.uri)
-        const sidxBoxParsed = new MpegDashSidx(sidxBox)
-        this.sidx = sidxBoxParsed
+        this.sidx = new MpegDashSidx(sidxBox)
       }
 
       return this;
