@@ -6,7 +6,7 @@ export type MediaClockTime = number
 
 export class MediaLocator {
 
-  static fromRelativeURI(relativeUri: string, baseUri?: string) {
+  static fromRelativeURI(relativeUri: string, baseUri?: string, byteRange?: ByteRange) {
     return new MediaLocator(
       resolveUri(relativeUri, baseUri)
     )
@@ -19,9 +19,9 @@ export class MediaLocator {
 
   constructor(
     uri: string,
+    byteRange: ByteRange = null,
     startTime: MediaClockTime = NaN,
     endTime: MediaClockTime = NaN,
-    byteRange: ByteRange = null
   ) {
     this.uri = uri
     this.startTime = startTime

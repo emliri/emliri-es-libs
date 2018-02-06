@@ -86,7 +86,7 @@ export class Resource extends EventEmitter {
   }
 
   get baseUri(): string {
-    return this.baseUri
+    return this.baseUri_
   }
 
   get byteRange(): ByteRange {

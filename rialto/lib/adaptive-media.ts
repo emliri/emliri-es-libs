@@ -1,46 +1,26 @@
 import {MediaSegment} from './media-segment'
 
-export type VideoInfo = {
- width: number
- height: number
-}
+import { CloneableScaffold } from "./cloneable";
 
-export type AudioInfo = {
-  language: string
-  channels: number
-}
-
-export type TextInfo = {
-  language: string
-}
-
-export enum MediaTypeFlag {
-  AUDIO = 0b001,
-  VIDEO = 0b010,
-  TEXT = 0b100
-}
-
-/**
- * Human-readable `MediaTypeFlag`
- * @param type
- */
-export function getMediaTypeFlagName(type: MediaTypeFlag): string {
-  switch(type) {
-  case MediaTypeFlag.AUDIO: return 'audio'
-  case MediaTypeFlag.VIDEO: return 'video'
-  case MediaTypeFlag.TEXT: return 'text'
-  default: return null
-  }
-}
+import {
+  VideoInfo,
+  AudioInfo,
+  TextInfo,
+  MediaTypeFlag,
+  MediaContainer,
+  MediaContainerInfo,
+  MediaTypeSet
+} from './media-container-info'
 
 /**
  * Represents what people refer to as rendition, quality level or representation, or media playlist
  *
  * Contains an array of segments and the metadata in common about these.
  */
-export class AdaptiveMedia {
+export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
 
   constructor(mediaEngine: AdaptiveMediaEngine = null) {
+    super()
     this.mediaEngine = mediaEngine
   }
 
@@ -67,13 +47,9 @@ export class AdaptiveMedia {
 /**
  * A set of media representations with a given combination of content-types (see flags)
  */
-export class AdaptiveMediaSet extends Set<AdaptiveMedia> {
+export class AdaptiveMediaSet extends Set<AdaptiveMedia> implements MediaContainer {
   parent: AdaptiveMediaPeriod
-  containedTypes: Set<MediaTypeFlag> = new Set()
-
-  containsMediaType(type: MediaTypeFlag): boolean {
-    return this.containedTypes.has(type)
-  }
+  mediaContainerInfo: MediaContainerInfo  = new MediaContainerInfo()
 }
 
 /**
@@ -83,24 +59,10 @@ export class AdaptiveMediaPeriod {
 
   sets: AdaptiveMediaSet[] = []
 
-  filterByContainedMediaTypes(mediaTypeFlags: Set<MediaTypeFlag>,
-    combined = false): AdaptiveMediaSet[] {
-
-    return this.sets.filter((mediaSet) => {
-      let hasOne = false
-      let hasAll = true
-
-      mediaTypeFlags.forEach((mediaTypeFlag) => {
-
-        hasOne = mediaSet.containedTypes.has(mediaTypeFlag)
-
-        if (!hasOne && hasAll) {
-          hasAll = false
-        }
-      })
-
-      return combined ? hasAll : hasOne
-    })
+  filterByContainedMediaTypes(mediaTypeFlags: MediaTypeSet, identical = false): AdaptiveMediaSet[] {
+    return this.sets.filter((mediaSet) =>
+      mediaSet.mediaContainerInfo.intersectsMediaTypeSet(mediaTypeFlags, identical)
+    )
   }
 }
 
