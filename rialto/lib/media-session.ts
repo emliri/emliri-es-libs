@@ -1,4 +1,4 @@
-import {PlaybackStateMachine, PlaybackStateMachineEvents, PlaybackStates, PlaybackStateMachineTransitionReasons} from './playback-state-machine'
+import {PlaybackStateMachine, PlaybackStateMachineEvents, PlaybackState, PlaybackStateMachineTransitionReasons} from './playback-state-machine'
 import {MediaElementObserver, MediaElement, MediaEventReasons} from './media-element-observer'
 
 import {getLogger} from './logger'
@@ -39,8 +39,8 @@ export class MediaSession {
   private playbackStateMachine_: PlaybackStateMachine;
   private mediaElObserver_: MediaElementObserver;
 
-  private _previousState: string = PlaybackStates.NULL
-  private _currentState: string = PlaybackStates.NULL
+  private _previousState: string = PlaybackState.NULL
+  private _currentState: string = PlaybackState.NULL
 
   private _stateChangeHistory: MediaSessionHistoryItem[]
   private _eventHistory: string[]
@@ -111,11 +111,11 @@ export class MediaSession {
     return this.playbackStateMachine_.state
   }
 
-  get sessionHistoryData() {
+  get history() {
     return this._stateChangeHistory;
   }
 
-  get sessionClockData() {
+  get clock() {
     return this._sessionClockData;
   }
 

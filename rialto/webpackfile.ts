@@ -21,6 +21,25 @@ const configs = []
   )
 }
 
+// Plugins
+{
+  const entrySrc = './plugins/index.ts'
+  const libName = 'RialtoPlugins'
+  const buildPath = 'dist'
+  const libraryTarget = 'umd'
+  const debug = true
+
+  configs.push(
+    createWebpackConfig({
+      debug,
+      entrySrc,
+      libName,
+      libraryTarget,
+      buildPath
+    })
+  )
+}
+
 // Demo
 {
   const entrySrc = './demo/main.ts'

@@ -2,7 +2,7 @@ import('jasmine')
 import('chai')
 
 import {MediaSession} from './media-session'
-import {PlaybackStateMachine, PlaybackStates} from './playback-state-machine'
+import {PlaybackStateMachine, PlaybackState} from './playback-state-machine'
 
 import MediaElementMock from './mocks/html5-media-element-mock'
 
@@ -56,7 +56,7 @@ describe('MediaSession', () => {
 
     mediaSession.mediaElement.dispatchEvent('readystatechange')
 
-    mediaSession.mediaPlaybackState.should.equal(PlaybackStates.READY)
+    mediaSession.mediaPlaybackState.should.equal(PlaybackState.READY)
 
   })
 

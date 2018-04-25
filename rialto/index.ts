@@ -2,14 +2,17 @@ import {
   PlaybackStateMachine,
   PlaybackStateMachineTransitions,
   PlaybackStateMachineTransitionReasons,
-  PlaybackStates,
-  PlaybackSubStates
+  PlaybackState,
+  PlaybackSubState
 } from './lib/playback-state-machine'
+
 import {MediaElementObserver} from './lib/media-element-observer'
 import {MediaSession, MediaSessionHistoryItem} from './lib/media-session'
+import {MediaLocator} from './lib/media-locator'
+import {MediaPlayer} from './lib/media-player'
+
 import {MediaSegment} from './lib/media-segment'
 import {MediaSegmentQueue} from './lib/media-segment-queue'
-import {MediaLocator} from './lib/media-locator'
 import {MpegDashMpd} from './lib/mpeg-dash-mpd'
 import {Logger, getLogger} from './lib/logger'
 
@@ -22,12 +25,13 @@ export {
   MediaSession,
   MediaSessionHistoryItem,
   MediaLocator,
-  MediaSegment,
-  MediaSegmentQueue,
+  MediaPlayer,
   PlaybackStateMachine,
   PlaybackStateMachineTransitions,
   PlaybackStateMachineTransitionReasons,
-  PlaybackStates,
-  PlaybackSubStates,
+  PlaybackState,
+  PlaybackSubState,
+  MediaSegment,
+  MediaSegmentQueue,
   MpegDashMpd
 }

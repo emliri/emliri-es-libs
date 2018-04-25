@@ -3,12 +3,12 @@ import('jasmine')
 
 import {
   PlaybackStateMachine,
-  PlaybackStates,
+  PlaybackState,
   PlaybackStateMachineTransitionReasons,
   PlaybackStateMachineTransitions
 } from './playback-state-machine'
 
-const States = PlaybackStates
+const States = PlaybackState
 const EventReasons = PlaybackStateMachineTransitionReasons
 
 const prettyPrintedTransitionsArrayInspected = JSON.stringify(

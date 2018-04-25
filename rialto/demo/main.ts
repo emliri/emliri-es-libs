@@ -5,7 +5,7 @@ import {
   MediaLocator,
   PlaybackStateMachine,
   PlaybackStateMachineTransitionReasons,
-  PlaybackStates,
+  PlaybackState,
   MpegDashMpd,
   getLogger
 } from '../index'
@@ -45,7 +45,7 @@ export namespace RialtoDemoApp {
       Vue.component('session-clock', {
         template: SessionClockTemplate,
         data () {
-          return app.mediaSession.sessionClockData
+          return app.mediaSession.clock
         }
       })
 
@@ -53,7 +53,7 @@ export namespace RialtoDemoApp {
         template: SessionHistoryTemplate,
         data () {
           return {
-            sessionHistoryData: app.mediaSession.sessionHistoryData
+            sessionHistoryData: app.mediaSession.history
           }
         },
       })

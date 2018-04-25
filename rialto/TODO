@@ -1,3 +1,12 @@
+- Allow for other things then MediaElement
+
+- Add client plugins
+
+- Fix state machine
+
+- Time/Duration -> Postion/Range Units (Frame-precision seek)
+
+- WebAudio output
 
 - Buffered range watcher !!!
 
@@ -15,15 +24,11 @@
 
 - Base EventDispather-object ? / Global event/message bus?
 
-
 - Audio-out VU-meter, FFT
 
 - Canvas rendering (+BBC stuff)
 
-
 - Display buffer fill
-
-- Frame-precision seek
 
 - Clock FPS slider
 

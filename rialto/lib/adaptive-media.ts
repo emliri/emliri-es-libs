@@ -67,8 +67,6 @@ export class AdaptiveMediaPeriod {
 }
 
 export interface AdaptiveMediaEngine {
-
   enableMediaSet(set: AdaptiveMediaSet)
-
   activateMediaStream(stream: AdaptiveMedia): Promise<boolean>
 }

@@ -23,7 +23,7 @@ export enum PlaybackStateMachineTransitionReasons {
   STATE_TRANSITION_FAIL = 'state-transition-fail'
 }
 
-export enum PlaybackStates {
+export enum PlaybackState {
   NULL = 'null',
   READY = 'ready',
   METADATA_LOADING = 'metadata-loading',
@@ -33,7 +33,7 @@ export enum PlaybackStates {
   ERROR = 'error'
 }
 
-export enum PlaybackSubStates {
+export enum PlaybackSubState {
   DEFAULT = 'default',
   FIRST_BUFFERING = 'first-buffering',
   REBUFFERING = 'rebuffering',
@@ -41,7 +41,7 @@ export enum PlaybackSubStates {
 }
 
 // local aliases :)
-const States = PlaybackStates
+const States = PlaybackState
 const EventReasons = PlaybackStateMachineTransitionReasons
 
 export const PlaybackStateMachineTransitions: PlaybackStateTransition[] = [
@@ -63,13 +63,16 @@ export const PlaybackStateMachineTransitions: PlaybackStateTransition[] = [
   [States.PAUSED, States.PAUSED, EventReasons.MEDIA_LOADING_PROGRESS],
 
   [States.PAUSED, States.PLAYING, EventReasons.MEDIA_CLOCK_UPDATE],
+
   [States.PLAYING, States.PLAYING, EventReasons.MEDIA_CLOCK_UPDATE],
+  [States.PLAYING, States.PLAYING, EventReasons.MEDIA_LOADING_PROGRESS],
 
   [States.PLAYING, States.PAUSED, EventReasons.MEDIA_PAUSE],
   [States.PLAYING, States.PAUSED, EventReasons.MEDIA_BUFFER_UNDERRUN],
   [States.PLAYING, States.PAUSED, EventReasons.MEDIA_SEEK],
   [States.PLAYING, States.PAUSED, EventReasons.MEDIA_ERROR],
 
+  [States.PAUSED, States.ENDED, EventReasons.MEDIA_END],
   [States.PLAYING, States.ENDED, EventReasons.MEDIA_END],
 
   [States.ENDED, States.PAUSED, EventReasons.MEDIA_SEEK],
@@ -81,7 +84,7 @@ export const PlaybackStateMachineTransitions: PlaybackStateTransition[] = [
 ]
 
 
-export type PlaybackStateTransition = [PlaybackStates, PlaybackStates, PlaybackStateMachineTransitionReasons]
+export type PlaybackStateTransition = [PlaybackState, PlaybackState, PlaybackStateMachineTransitionReasons]
 
 export class PlaybackStateMachine extends EventEmitter {
 
@@ -100,7 +103,7 @@ export class PlaybackStateMachine extends EventEmitter {
   }
 
   static lookupStateOfMediaElement(mediaEl) {
-    const States = PlaybackStates
+    const States = PlaybackState
 
     if (mediaEl.error) {
       return States.ERROR
@@ -125,11 +128,11 @@ export class PlaybackStateMachine extends EventEmitter {
     }
   }
 
-  private state_: PlaybackStates;
-  private previousState_: PlaybackStates;
+  private state_: PlaybackState;
+  private previousState_: PlaybackState;
   private error_: Error;
 
-  constructor(initialStateOrMediaElement: MediaElement | PlaybackStates) {
+  constructor(initialStateOrMediaElement: MediaElement | PlaybackState) {
     super()
     this.previousState_ = null
     this.error_ = null
@@ -145,7 +148,7 @@ export class PlaybackStateMachine extends EventEmitter {
     }
 
     // TODO: check if initialState is a valid state
-    this.state_ = initialState || PlaybackStates.NULL
+    this.state_ = initialState || PlaybackState.NULL
   }
 
   triggerStateTransition(eventReason) {

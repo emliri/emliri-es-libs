@@ -1,0 +1,77 @@
+<html>
+
+  <head>
+    <title>RIALTO Media Toolkit player example</title>
+  </head>
+
+  <body>
+
+    <div id="page-header" class="page-header">
+      <h1>
+          RIALTO Multimedia Toolkit
+      </h1>
+      <h2>
+          (to build web apps with audio and video and cc)
+      </h2>
+    </div>
+
+    <div id="video-wrapper">
+      <video id='video' controls preload='none' poster="https://media.w3.org/2010/05/sintel/poster.png">
+        <source id='mp4' src="https://media.w3.org/2010/05/sintel/trailer.mp4" type='video/mp4'>
+        <source id='webm' src="https://media.w3.org/2010/05/sintel/trailer.webm" type='video/webm'>
+        <source id='ogv' src="https://media.w3.org/2010/05/sintel/trailer.ogv" type='video/ogg'>
+        <p>Your user agent does not support the HTML5 Video element.</p>
+      </video>
+
+      <div>
+        <br>
+        <output id="state"></output>
+        <br>
+        <output id="position"></output>
+        <br>
+      </div>
+
+      <div>
+        <br>
+        <button onclick="play()">Play</button>
+        <button onclick="pause()">Pause</button>
+        <button onclick="seek(-10)">Seek -10s</button>
+        <button onclick="seek(10)">Seek +10s</button>
+      </div>
+
+    </div>
+
+
+
+    <script src="dist/Rialto.umd.js"></script>
+    <script src="dist/RialtoDemo.umd.js"></script>
+
+    <script type="text/javascript">
+      var player = window.player = new Rialto.MediaPlayer(document.getElementById('video'), onPlayerStateChange)
+
+      function onPlayerStateChange() {
+        document.getElementById('state').innerHTML = player.state
+        document.getElementById('position').innerHTML = player.time
+      }
+
+      function play() {
+        player.play()
+      }
+
+      function pause() {
+        player.pause()
+      }
+
+      function seek(targetSecs) {
+        player.seek(targetSecs, true).then(() => {
+          console.log('seeked to', player.time)
+        }).catch((err) => {
+          console.warn('error seeking:', err)
+        })
+      }
+
+    </script>
+
+  </body>
+
+</html>
