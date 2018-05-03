@@ -106,6 +106,7 @@ export class MediaElementController {
       break;
     case MediaPlayerAction.SET_SOURCE:
       this._execSetSource(item);
+      break;
     case MediaPlayerAction.SET_VOLUME:
       this._execSetVolume(item);
       break;
@@ -187,8 +188,9 @@ type MediaPlayerActionResult = MediaPlayerActionQueueItem
 
 export class MediaPlayer {
 
-  private _mediaSession: MediaSession;
-  private _mediaElementController: MediaElementController;
+  private _mediaElement: HTMLMediaElement = null;
+  private _mediaSession: MediaSession = null;
+  private _mediaElementController: MediaElementController = null;
   private _onStateChange: () => void;
 
   constructor(mediaElement: HTMLMediaElement, onStateChange?: () => void) {
@@ -196,6 +198,8 @@ export class MediaPlayer {
     if (!mediaElement) {
       throw new Error('Need a media element to start with');
     }
+
+    this.takeMediaElement_(mediaElement);
 
     const mediaSession = new MediaSession(mediaElement,
       this.onMediaElementEventTranslatedCb_.bind(this),
@@ -215,7 +219,7 @@ export class MediaPlayer {
   }
 
   get duration(): number {
-    return this._mediaSession.mediaElement.duration
+    return this._mediaSession.mediaDuration
   }
 
   setSource(url: string): Promise<MediaPlayerActionResult> {
@@ -258,16 +262,21 @@ export class MediaPlayer {
     // Optional: Round to make sure the number is finite
     // target = Math.round(target * 1000) / 1000
 
+    this._mediaSession.setSeeking(true)
+
     // verify post-seek condition: all possible pre-seeking states can only collapse to playing or paused
     const postSeekingState = (this.state !== PlaybackState.PLAYING) ? PlaybackState.PAUSED : PlaybackState.PLAYING
 
-    console.log('expected post-seek state', postSeekingState)
+    //console.log('expected post-seek state', postSeekingState)
 
     const actionPromise = this._mediaElementController.do(MediaPlayerAction.SEEK, target)
     return actionPromise.then(() => {
+
+      this._mediaSession.setSeeking(false)
+
       const currentState = this.state
 
-      console.log('seeked and state is', currentState)
+      //console.log('seeked and state is', currentState)
 
       if (postSeekingState !== currentState) {
         const err = `Wrong state after seek. Expected "${postSeekingState}" but am in "${this.state}"`
@@ -279,7 +288,7 @@ export class MediaPlayer {
     })
   }
 
-  onPlaybackStateMachineTransitionCb_(mediaSession: MediaSession,
+  private onPlaybackStateMachineTransitionCb_(mediaSession: MediaSession,
       reason: PlaybackStateMachineTransitionReasons) {
 
     if (this._onStateChange) {
@@ -288,8 +297,25 @@ export class MediaPlayer {
     //
   }
 
-  onMediaElementEventTranslatedCb_(mediaSession, eventReason) {
-    //
+  private onMediaElementEventTranslatedCb_(mediaSession, eventReason) {
+    console.log(eventReason)
+  }
+
+  private takeMediaElement_(mediaElement: HTMLMediaElement) {
+    this._mediaElement = mediaElement;
+  }
+
+  /**
+   * Reset a media element for re-usal
+   */
+  private resetMediaElement_() {
+    this._mediaElement.controls = false;
+    this._mediaElement.innerHTML = '<p>Your user agent does not support the HTML5 Video element.</p>';
+    this._mediaElement.preload = 'none';
+    this._mediaElement.src = null;
+    //this._mediaElement.
+    // FIXME: this._mediaElement.poster = ... // should wipe poster if any
+
   }
 
 }

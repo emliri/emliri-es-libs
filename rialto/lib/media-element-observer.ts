@@ -57,8 +57,6 @@ export class MediaElementObserver {
 
     this.eventTranslatorCallback_ = eventTranslatorCallback
 
-    this.pollingFps_ = pollingFps;
-
     this.setPollingFps(pollingFps)
   }
 
@@ -66,14 +64,22 @@ export class MediaElementObserver {
    * @param pollingFps How many frames-per-second to aim for at polling to update state (pass NaN or 0 to unset)
    */
   setPollingFps(pollingFps: number) {
-    clearInterval(this.pollingInterval_)
+    // check value
     if (pollingFps > MAX_POLLING_FPS) {
       throw new Error(`Clock-polling FPS can not be larger than ${MAX_POLLING_FPS} but requested ${pollingFps}`)
     }
+    // store value
+    this.pollingFps_ = pollingFps;
+    // apply change
+    clearInterval(this.pollingInterval_)
     if (typeof pollingFps === 'number' && pollingFps > 0) {
-      const intervalMs = 1000 / pollingFps
+      const intervalMs = this.getPollingPeriodMs()
       this.pollingInterval_ = setInterval(this.onPollFrame_.bind(this), intervalMs)
     }
+  }
+
+  getPollingPeriodMs(): number {
+    return (1 / this.pollingFps_) * 1000;
   }
 
   dispose() {

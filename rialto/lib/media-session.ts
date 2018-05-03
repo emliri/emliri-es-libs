@@ -33,7 +33,7 @@ export class MediaSession {
     return window.document.createElement(subclass)
   }
 
-  private html5MediaElement_: MediaElement;
+  //private html5MediaElement_: MediaElement;
   private onMediaElementEventTranslatedCb_: MediaEventTranslationCallback;
   private onPlaybackStateMachineTransitionCb_: PlaybackStateMachineTransitionCallback;
   private playbackStateMachine_: PlaybackStateMachine;
@@ -41,6 +41,10 @@ export class MediaSession {
 
   private _previousState: string = PlaybackState.NULL
   private _currentState: string = PlaybackState.NULL
+
+  private _lastClockUpdateTs: Date = null;
+  private _clockUpdateTimeout: number = null;
+  private _seeking: boolean = false;
 
   private _stateChangeHistory: MediaSessionHistoryItem[]
   private _eventHistory: string[]
@@ -55,15 +59,14 @@ export class MediaSession {
     onMediaElementEventTranslatedCb: MediaEventTranslationCallback,
     onPlaybackStateMachineTransitionCb: PlaybackStateMachineTransitionCallback) {
 
-    this.html5MediaElement_ = iHtml5MediaElement
     this.onMediaElementEventTranslatedCb_ = onMediaElementEventTranslatedCb
     this.onPlaybackStateMachineTransitionCb_ = onPlaybackStateMachineTransitionCb
 
     this.mediaElObserver_ = new MediaElementObserver(this.onMediaElementEventTranslated_.bind(this), 60)
-    this.mediaElObserver_.attachMedia(this.mediaElement)
+    this.mediaElObserver_.attachMedia(iHtml5MediaElement)
 
     this.playbackStateMachine_ = new PlaybackStateMachine(
-      PlaybackStateMachine.lookupStateOfMediaElement(this.mediaElement)
+      PlaybackStateMachine.lookupStateOfMediaElement(iHtml5MediaElement)
     )
 
     this.playbackStateMachine_.on(
@@ -89,8 +92,6 @@ export class MediaSession {
   }
 
   dispose() {
-    this.html5MediaElement_ = null
-
     this.mediaElObserver_.detachMedia()
     this.mediaElObserver_ = null
 
@@ -98,10 +99,6 @@ export class MediaSession {
 
     this.onMediaElementEventTranslatedCb_ = null
     this.onPlaybackStateMachineTransitionCb_ = null
-  }
-
-  get mediaElement() {
-    return this.html5MediaElement_
   }
 
   get mediaPlaybackState() {
@@ -119,11 +116,28 @@ export class MediaSession {
     return this._sessionClockData;
   }
 
+  get mediaDuration() {
+    return this.mediaElObserver_.mediaEl.duration
+  }
+
+  get mediaElement() {
+    return this.mediaElObserver_.mediaEl
+  }
+
+  setSeeking(b: boolean) {
+    this._seeking = b;
+  }
+
   onMediaElementEventTranslated_(eventReason) {
 
     if(this.onMediaElementEventTranslatedCb_) {
       this.onMediaElementEventTranslatedCbInternalTracking_(this, eventReason)
       this.onMediaElementEventTranslatedCb_(this, eventReason)
+    }
+
+    if (this._seeking
+      && eventReason === MediaEventReasons.MEDIA_CLOCK_UPDATE) {
+      return;
     }
 
     try {
@@ -183,10 +197,24 @@ export class MediaSession {
 
   onMediaElementEventTranslatedCbInternalTracking_(mediaSession, eventReason) {
     if (eventReason === PlaybackStateMachineTransitionReasons.MEDIA_CLOCK_UPDATE) {
+      this._lastClockUpdateTs = new Date()
+      if (this._lastClockUpdateTs) {
+        clearTimeout(this._clockUpdateTimeout)
+      }
+      const timeoutMs = 2 * this.mediaElObserver_.getPollingPeriodMs()
+      this._clockUpdateTimeout = window.setTimeout(() => {
+        this.onClockUpdateTimeout_()
+      }, timeoutMs)
       this._sessionClockData.time = mediaSession.mediaElement.currentTime
     } else {
       log('Media element event translated:', eventReason);
       this._eventHistory.push(eventReason)
+    }
+  }
+
+  onClockUpdateTimeout_() {
+    if (this._seeking) {
+      this.onMediaElementEventTranslated_(MediaEventReasons.MEDIA_PAUSE)
     }
   }
 }

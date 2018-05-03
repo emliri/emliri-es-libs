@@ -8,9 +8,11 @@
 
 - WebAudio output
 
-- Buffered range watcher !!!
+- Buffered range watcher
 
-- Cache!
+- Cache
+
+- Poster plugin
 
 - DASH demo (https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd)
 

@@ -52,8 +52,8 @@ export const PlaybackStateMachineTransitions: PlaybackStateTransition[] = [
   [States.READY, States.METADATA_LOADING, EventReasons.MEDIA_LOADING_PROGRESS],
 
   [States.METADATA_LOADING, States.PAUSED, EventReasons.MEDIA_DURATION_CHANGE],
-
   [States.METADATA_LOADING, States.ERROR, EventReasons.MEDIA_ERROR],
+  [States.METADATA_LOADING, States.PAUSED, EventReasons.MEDIA_CLOCK_UPDATE],
 
   [States.PAUSED, States.PAUSED, EventReasons.MEDIA_ENGINE_INIT],
   [States.PAUSED, States.PAUSED, EventReasons.MEDIA_AUTO_PLAY],
@@ -66,20 +66,20 @@ export const PlaybackStateMachineTransitions: PlaybackStateTransition[] = [
 
   [States.PLAYING, States.PLAYING, EventReasons.MEDIA_CLOCK_UPDATE],
   [States.PLAYING, States.PLAYING, EventReasons.MEDIA_LOADING_PROGRESS],
+  [States.PLAYING, States.PLAYING, EventReasons.MEDIA_BUFFER_UNDERRUN],
+  [States.PLAYING, States.PLAYING, EventReasons.MEDIA_SEEK],
+  [States.PLAYING, States.PLAYING, EventReasons.MEDIA_ERROR],
 
   [States.PLAYING, States.PAUSED, EventReasons.MEDIA_PAUSE],
-  [States.PLAYING, States.PAUSED, EventReasons.MEDIA_BUFFER_UNDERRUN],
-  [States.PLAYING, States.PAUSED, EventReasons.MEDIA_SEEK],
-  [States.PLAYING, States.PAUSED, EventReasons.MEDIA_ERROR],
 
   [States.PAUSED, States.ENDED, EventReasons.MEDIA_END],
+
   [States.PLAYING, States.ENDED, EventReasons.MEDIA_END],
 
   [States.ENDED, States.PAUSED, EventReasons.MEDIA_SEEK],
   [States.ENDED, States.PAUSED, EventReasons.MEDIA_MANUAL_PLAY],
 
   [States.PAUSED, States.ERROR, EventReasons.MEDIA_ERROR],
-
   [States.ERROR, States.PAUSED, EventReasons.MEDIA_RECOVER]
 ]
 
