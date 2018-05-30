@@ -14,6 +14,11 @@ import {MediaPlayer} from './lib/media-player'
 import {MediaSegment} from './lib/media-segment'
 import {MediaSegmentQueue} from './lib/media-segment-queue'
 import {MpegDashMpd} from './lib/mpeg-dash-mpd'
+
+import {HlsM3u8File} from './lib/hls-m3u8';
+
+import {XMediaClient} from './lib/x-media-client';
+
 import {Logger, getLogger} from './lib/logger'
 
 import {Observable} from '../objec-ts/index'
@@ -33,5 +38,7 @@ export {
   PlaybackSubState,
   MediaSegment,
   MediaSegmentQueue,
-  MpegDashMpd
+  MpegDashMpd,
+  HlsM3u8File,
+  XMediaClient,
 }

@@ -2,7 +2,9 @@
 
 const PREFIX_ROOT = 'R14lt0'
 
-const GLOBAL_DEBUG = false
+// Disables all logs when false, overrides all local settings
+// When true, logging levels are applied as expected per category
+const GLOBAL_LOG_ENABLE = true;
 
 export type LoggerFunc = (...args: any[]) => void
 
@@ -33,7 +35,7 @@ export enum LoggerLevels {
 
 export const getLogger = function(category: string, level: number = LoggerLevels.ON): Logger {
 
-    if (!GLOBAL_DEBUG) {
+    if (!GLOBAL_LOG_ENABLE) {
         level = LoggerLevels.OFF
     }
 

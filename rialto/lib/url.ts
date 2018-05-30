@@ -22,13 +22,19 @@ export class URLObject extends URL {
 
 export function resolveUri(relativeUri: string, baseUri: string): string {
 
+  //console.log('resolveUri:', relativeUri, baseUri);
+
   if (!baseUri) {
     return relativeUri
   }
 
-  return buildAbsoluteURL(baseUri, relativeUri, {
+  const resolvedUrl = buildAbsoluteURL(baseUri, relativeUri, {
     alwaysNormalize: true
-  })
+  });
+
+  //console.log(resolvedUrl);
+
+  return resolvedUrl;
 }
 
 

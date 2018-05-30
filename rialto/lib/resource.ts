@@ -121,6 +121,10 @@ export class Resource extends EventEmitter {
     return this.fetchLatency_
   }
 
+  setBaseUri(baseUri: string) {
+    this.baseUri_ = baseUri;
+  }
+
   /**
    * Tries to resolve the resource's URI to an absolute URL,
    * with the given `baseUri` at construction or the optional argument
@@ -128,7 +132,6 @@ export class Resource extends EventEmitter {
    * Create a new resource object to do that.
    */
   getUrl(base?: string): string {
-    // TODO: resolve here
     return resolveUri(this.uri, base ? base : this.baseUri_)
   }
 
@@ -136,7 +139,7 @@ export class Resource extends EventEmitter {
     return new URLObject(this.getUrl())
   }
 
-  setBuffer(ab): void {
+  setBuffer(ab: ArrayBuffer): void {
     this.ab_ = ab
     this.emit(ResourceEvents.BUFFER_SET)
   }
@@ -154,8 +157,12 @@ export class Resource extends EventEmitter {
       this.fetchReject_ = reject
     })
 
+    const url = this.getUrl();
+
+    console.log(url);
+
     const xhr = this.xhr_ = new XHR(
-      this.getUrl(),
+      url,
       this.onXHRCallback_.bind(this),
       XHRMethod.GET,
       XHRResponseType.ARRAY_BUFFER,
@@ -191,7 +198,7 @@ export class Resource extends EventEmitter {
 
     if (xhr.xhrState === XHRState.DONE) {
       if (xhr.getStatusCategory() === XHRStatusCategory.SUCCESS) {
-        this.setBuffer(xhr.responseData)
+        this.setBuffer(<ArrayBuffer> xhr.responseData)
         this.fetchResolve_(this)
         this.emit(ResourceEvents.FETCH_SUCCEEDED)
       }

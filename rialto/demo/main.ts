@@ -7,6 +7,8 @@ import {
   PlaybackStateMachineTransitionReasons,
   PlaybackState,
   MpegDashMpd,
+  HlsM3u8File,
+  XMediaClient,
   getLogger
 } from '../index'
 
@@ -132,10 +134,29 @@ export namespace RialtoDemoApp {
   export const runMPDResourceExample = () => {
 
     const mpd = new MpegDashMpd('https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd')
-
     mpd.fetch()
-
   }
+
+  export const runM3U8ResourceExample = () => {
+    //const m3u = new HlsM3u8File('https://video-dev.github.io/streams/x36xhzz/x36xhzz.m3u8')
+
+    const m3u8 = new HlsM3u8File('https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s-fmp4/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8');
+    m3u8.fetch();
+  }
+
+  export const runXMediaClientExample = () => {
+
+    const videoEl: HTMLElement = document.getElementById('video');
+
+    const mediaClient = new XMediaClient(<HTMLMediaElement> videoEl);
+
+    mediaClient.setSourceURL('https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s-fmp4/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8');
+
+    const context: any = window;
+
+    context.mediaClient = mediaClient;
+  }
+
 }
 
 

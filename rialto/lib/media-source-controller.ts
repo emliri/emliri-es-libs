@@ -6,15 +6,13 @@ import {
   SourceBufferQueueUpdateCallbackData
 } from './source-buffer-queue'
 
-export default class MediaSourceController extends EventEmitter {
+export enum MediaSourceControllerEvents {
+  MEDIA_CLOCK_UPDATED = 'media-clock-updated',
+  MEDIA_DURATION_CHANGED = 'media-duration-changed',
+  MEDIA_STALLED = 'media-stalling'
+}
 
-  static get Events() {
-    return {
-      MEDIA_CLOCK_UPDATED: 'media-clock-updated',
-      MEDIA_DURATION_CHANGED: 'media-duration-changed',
-      MEDIA_STALLED: 'media-stalling'
-    }
-  }
+export class MediaSourceController extends EventEmitter {
 
   private mediaSource_: MediaSource
   private sourceBufferQueues_: SourceBufferQueue[]
@@ -22,11 +20,11 @@ export default class MediaSourceController extends EventEmitter {
   private mediaClockTime_: number
   private mediaClockLastUpdateTime_: number
 
-  constructor(mediaSource) {
+  constructor(mediaSource?: MediaSource) {
     super()
 
-    if (!MediaSource || !mediaSource) {
-      throw new Error('Need MediaSource in constructor')
+    if (!(mediaSource || MediaSource)) {
+      throw new Error('Need global default MediaSource constructor or injected interface instance');
     }
 
     if (!mediaSource) {
@@ -56,17 +54,22 @@ export default class MediaSourceController extends EventEmitter {
     return this.sourceBufferQueues_
   }
 
-  addSourceBufferQueue(mimeType) {
+  addSourceBufferQueue(mimeType: string) {
     if (!MediaSource.isTypeSupported(mimeType)) {
       console.error('MediaSource not supporting:', mimeType)
       return false
     }
     try {
-      this.sourceBufferQueues_.push(
-        new SourceBufferQueue(this, mimeType, null, (sbQueue, eventData) => {
+
+      const sbQueue = new SourceBufferQueue(this.mediaSource, mimeType, null,
+        (sbQueue, eventData) => {
           this.onSourceBufferQueueUpdateCb_(sbQueue, eventData)
-        })
-      )
+      });
+
+      sbQueue.setModeSequential(true);
+
+      this.sourceBufferQueues_.push(sbQueue);
+
     } catch(err) {
       console.error(err)
       return false
@@ -93,7 +96,7 @@ export default class MediaSourceController extends EventEmitter {
   }
 
   updateMediaClockTime(clockTime) {
-    const {Events} = MediaSourceController
+
     const now = Date.now()
     const wallClockDelta = now - this.mediaClockLastUpdateTime_
     const mediaTimeDelta = clockTime - this.mediaClockTime_
@@ -101,20 +104,19 @@ export default class MediaSourceController extends EventEmitter {
     if (this.mediaClockTime_ !== clockTime) {
       this.mediaClockTime_ = clockTime
       this.mediaClockLastUpdateTime_ = now
-      this.emit(Events.MEDIA_CLOCK_UPDATED, clockTime)
+      this.emit(MediaSourceControllerEvents.MEDIA_CLOCK_UPDATED, clockTime)
 
       // detect discontinuities/jitter in playback here
 
     } else {
-      this.emit(Events.MEDIA_STALLED, clockTime)
+      this.emit(MediaSourceControllerEvents.MEDIA_STALLED, clockTime)
     }
   }
 
   setMediaDuration(duration) {
-    const {Events} = MediaSourceController
     if (this.mediaDuration_ !== duration) {
       this.mediaDuration_ = duration
-      this.emit(Events.MEDIA_DURATION_CHANGED, duration)
+      this.emit(MediaSourceControllerEvents.MEDIA_DURATION_CHANGED, duration)
     }
   }
 

@@ -203,7 +203,7 @@ export class MpegDashMpd extends Resource implements ParseableResource<AdaptiveM
     }
   }
 
-  parse() {
+  parse(): Promise<AdaptiveMediaPeriod[]> {
     const buf = this.buffer
     if (!buf) {
       throw new Error('No data to parse')
@@ -363,7 +363,7 @@ export class MpegDashMpd extends Resource implements ParseableResource<AdaptiveM
           stream.textInfo = {
             language: set.mediaContainerInfo.containsMediaType(MediaTypeFlag.TEXT) ? mpegSet.lang : null
           }
-          stream.segments = []
+          //stream.segments = []
 
           set.add(stream)
         })

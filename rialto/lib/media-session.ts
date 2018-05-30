@@ -1,6 +1,9 @@
 import {PlaybackStateMachine, PlaybackStateMachineEvents, PlaybackState, PlaybackStateMachineTransitionReasons} from './playback-state-machine'
 import {MediaElementObserver, MediaElement, MediaEventReasons} from './media-element-observer'
 
+import {PlayheadObserver} from './playhead-observer'
+import {BufferedRangeObserver} from './buffered-range-observer'
+
 import {getLogger} from './logger'
 
 const {

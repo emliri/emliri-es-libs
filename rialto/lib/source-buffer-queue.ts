@@ -1,4 +1,7 @@
 import {MediaSegment} from './media-segment'
+import { getLogger } from './logger';
+
+const {log} = getLogger('source-buffer-queue');
 
 export type SourceBufferQueueItem = {
   method: string
@@ -26,7 +29,12 @@ export class SourceBufferQueue {
   private onUpdate_: SourceBufferQueueUpdateCallback
   private bufferMap_: any[];
 
-  constructor(mediaSource, mimeType, trackDefaults, onUpdate) {
+  constructor(
+    mediaSource: MediaSource,
+    mimeType: string,
+    trackDefaults = null,
+    onUpdate?: SourceBufferQueueUpdateCallback) {
+
     this.mimeType_ = mimeType
     this.updateStartedTime_ = null
     this.queue_ = []
@@ -34,20 +42,23 @@ export class SourceBufferQueue {
     this.bufferedBytesCount_ = 0
     this.sourceBuffer_ = mediaSource.addSourceBuffer(mimeType)
     this.initialMode_ = this.sourceBuffer_.mode
+
+    log('SourceBuffer created with initial mode:', this.initialMode_);
+
     if (trackDefaults) {
       throw new Error('trackDefaults arg not supported (yet) except null')
       //this.sourceBuffer_.trackDefaults = trackDefaults
     }
-    this.onUpdate_ = onUpdate
+    this.onUpdate_ = onUpdate || (() => {});
     this.sourceBuffer_.addEventListener('updatestart', this.onUpdateStart_.bind(this))
     this.sourceBuffer_.addEventListener('updateend', this.onUpdateEnd_.bind(this))
   }
 
-  get mimeType() {
+  get mimeType(): string {
     return this.mimeType_
   }
 
-  get bufferedBytesCount() {
+  get bufferedBytesCount(): number {
     return this.bufferedBytesCount_
   }
 
@@ -67,11 +78,11 @@ export class SourceBufferQueue {
 
 	*/
 
-  isInitialModeSequential() {
+  isInitialModeSequential(): boolean {
     return this.initialMode_ === 'sequence'
   }
 
-  getMode() {
+  getMode(): string {
     return this.sourceBuffer_.mode
   }
 
@@ -90,7 +101,7 @@ export class SourceBufferQueue {
     }
   }
 
-  isUpdating() {
+  isUpdating(): boolean {
     return this.sourceBuffer_.updating
   }
 
@@ -98,7 +109,7 @@ export class SourceBufferQueue {
     return this.sourceBuffer_.buffered
   }
 
-  getTotalBytesQueued() {
+  getTotalBytesQueued(): number {
     return this.queue_.filter((item) => {
       return item.method === 'appendBuffer'
     }).reduce((accu, item) => {
@@ -106,11 +117,11 @@ export class SourceBufferQueue {
     }, 0)
   }
 
-  getTotalBytes() {
+  getTotalBytes(): number {
     return this.bufferedBytesCount + this.getTotalBytesQueued()
   }
 
-  getItemsQueuedCount(filterMethod) {
+  getItemsQueuedCount(filterMethod: string): number {
     return this.queue_.filter((item) => {
       if (!filterMethod) {
         return true
@@ -119,7 +130,7 @@ export class SourceBufferQueue {
     }).length
   }
 
-  appendBuffer(arrayBuffer, timestampOffset) {
+  appendBuffer(arrayBuffer: ArrayBuffer, timestampOffset: number) {
     this.queue_.push({method: 'appendBuffer', arrayBuffer, timestampOffset})
 
     this.tryRunQueueOnce_()
@@ -148,19 +159,42 @@ export class SourceBufferQueue {
     this.tryRunQueueOnce_()
   }
 
-  incrBufferedBytesCnt_(bytes) {
+  drop(immediateAbort) {
+    if (immediateAbort && this.isUpdating()) {
+      this.sourceBuffer_.abort()
+    }
+    this.queue_ = []
+  }
+
+  flush() {
+    this.remove(0, Infinity)
+  }
+
+  dropAndFlush() {
+    this.drop(true)
+    this.flush()
+  }
+
+  private incrBufferedBytesCnt_(bytes) {
     this.bufferedBytesCount_ += bytes
   }
 
-  decBufferedBytesCnt_(bytes) {
+  private decBufferedBytesCnt_(bytes) {
     this.bufferedBytesCount_ -= bytes
   }
 
-  tryRunQueueOnce_() {
+  private tryRunQueueOnce_() {
     if (this.isUpdating()) {
       return
     }
-    const {method, arrayBuffer, timestampOffset, start, end} = this.queue_.shift()
+
+    const item: SourceBufferQueueItem = this.queue_.shift();
+    if (!item) {
+      return;
+    }
+
+    const {method, arrayBuffer, timestampOffset, start, end} = item;
+
     this.sourceBuffer_.timestampOffset = timestampOffset
 
     switch(method) {
@@ -178,37 +212,24 @@ export class SourceBufferQueue {
     }
   }
 
-  onUpdateEnd_() {
+  private onUpdateEnd_() {
     const updateTimeMs = Date.now() - this.updateStartedTime_
     const callbackData = {
       updateTimeMs
     }
     this.updateStartedTime_ = null
+
+    log('onUpdateEnd_', callbackData);
+
     this.onUpdate_(this, callbackData)
 
     this.tryRunQueueOnce_()
   }
 
-  onUpdateStart_() {
+  private onUpdateStart_() {
     if (this.updateStartedTime_ !== null) {
       throw new Error('updateStartedTime_ should be null')
     }
     this.updateStartedTime_ = Date.now()
-  }
-
-  drop(immediateAbort) {
-    if (immediateAbort && this.isUpdating()) {
-      this.sourceBuffer_.abort()
-    }
-    this.queue_ = []
-  }
-
-  flush() {
-    this.remove(0, Infinity)
-  }
-
-  dropAndFlush() {
-    this.drop(true)
-    this.flush()
   }
 }
