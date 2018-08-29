@@ -1,6 +1,3 @@
-/**
- * For usage in a Node.js base env (like ts-node) @see https://www.npmjs.com/package/node-http-xhr
- */
 
 import {EventEmitter} from 'eventemitter3'
 
@@ -18,6 +15,7 @@ import {
 } from './xhr'
 
 import {ByteRange} from './byte-range'
+import { ResourceRequestMaker, IResourceRequest, makeDefaultRequest } from './resource-request';
 
 export enum ResourceEvents {
   BUFFER_SET = 'buffer:set',
@@ -51,7 +49,10 @@ export class Resource extends EventEmitter {
   private ab_: ArrayBuffer;
   private abortedCnt_: number;
   private fetchAttemptCnt_: number;
-  private xhr_: XHR = null;
+
+  private requestMaker_: ResourceRequestMaker | null = null;
+  private xhr_: IResourceRequest = null;
+
   private mimeType_: string // TODO: set this from response headers;
 
   private fetchLatency_: number = NaN;
@@ -158,16 +159,16 @@ export class Resource extends EventEmitter {
     })
 
     const url = this.getUrl();
+    //console.log(url);
 
-    console.log(url);
+    const makeRequest = this.getRequestMaker();
 
-    const xhr = this.xhr_ = new XHR(
-      url,
-      this.onXHRCallback_.bind(this),
-      XHRMethod.GET,
-      XHRResponseType.ARRAY_BUFFER,
-      this.byteRange
-    )
+    this.xhr_ = makeRequest(url, {
+      requestCallback: this.onXHRCallback_.bind(this),
+      method: XHRMethod.GET,
+      responseType: XHRResponseType.ARRAY_BUFFER,
+      byteRange: this.byteRange
+    });
 
     return fetchPromise
   }
@@ -177,7 +178,22 @@ export class Resource extends EventEmitter {
     this.xhr_.abort()
   }
 
-  private onXHRCallback_(xhr: XHR, isProgressUpdate: boolean) {
+  /**
+   *
+   * @param rm passing null means use default
+   */
+  setRequestMaker(rm: ResourceRequestMaker | null) {
+    this.requestMaker_ = rm;
+  }
+
+  getRequestMaker(): ResourceRequestMaker {
+    if (this.requestMaker_) {
+      return this.requestMaker_;
+    }
+    return makeDefaultRequest;
+  }
+
+  private onXHRCallback_(xhr: IResourceRequest, isProgressUpdate: boolean) {
 
     if (isProgressUpdate) {
       this.emit(ResourceEvents.FETCH_PROGRESS)
@@ -197,7 +213,7 @@ export class Resource extends EventEmitter {
     }
 
     if (xhr.xhrState === XHRState.DONE) {
-      if (xhr.getStatusCategory() === XHRStatusCategory.SUCCESS) {
+      if (xhr.wasSuccessful()) {
         this.setBuffer(<ArrayBuffer> xhr.responseData)
         this.fetchResolve_(this)
         this.emit(ResourceEvents.FETCH_SUCCEEDED)

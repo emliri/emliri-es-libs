@@ -9,6 +9,7 @@
 import {ByteRange} from './byte-range'
 
 import {getLogger} from './logger'
+import { IResourceRequest } from './resource-request';
 
 const {
   log
@@ -94,7 +95,7 @@ export type XHRCallbackFunction = (xhr: XHR, isProgressUpdate: boolean) => void
  * @class
  * @constructor
  */
-export class XHR {
+export class XHR implements IResourceRequest {
 
   private _xhrCallback: XHRCallbackFunction
   private _xhr: XMLHttpRequest
@@ -321,11 +322,19 @@ export class XHR {
     return this._loadedBytes / this._totalBytes
   }
 
+  getSecondsSinceCreated() {
+    return (new Date().getTime() - this._createdAt.getTime()) / 1000
+  }
+
   abort() {
     this._xhr.abort()
   }
 
-  onReadyStateChange() {
+  wasSuccessful(): boolean {
+    return this.getStatusCategory() === XHRStatusCategory.SUCCESS;
+  }
+
+  private onReadyStateChange() {
     const xhr = this._xhr
 
     this._state = xhr.readyState
@@ -352,28 +361,24 @@ export class XHR {
     this._xhrCallback(this, false)
   }
 
-  onError(event: ErrorEvent) {
+  private onError(event: ErrorEvent) {
     this._error = event.error
 
     this._xhrCallback(this, false)
   }
 
-  onAbort(event: Event) {
+  private onAbort(event: Event) {
     this._aborted = true
 
     this._xhrCallback(this, false)
   }
 
-  onProgress(event: ProgressEvent) {
+  private onProgress(event: ProgressEvent) {
     this._loadedBytes = event.loaded
     this._totalBytes = event.total
 
     if (this._progressUpdatesEnabled) {
       this._xhrCallback(this, true)
     }
-  }
-
-  getSecondsSinceCreated() {
-    return (new Date().getTime() - this._createdAt.getTime()) / 1000
   }
 }
