@@ -8,6 +8,7 @@ import {AdaptiveMediaPeriod, AdaptiveMediaSet, AdaptiveMedia} from './adaptive-m
 
 import {getLogger, LoggerLevels} from './logger'
 import { MediaSegment, MediaLocator } from '..';
+import { resolveUri } from './url';
 
 const {
   log,
@@ -97,7 +98,7 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
       }
       media.label = a.NAME;
 
-      media.segmentIndexUri = playlist.uri;
+      media.segmentIndexUri = resolveUri(playlist.uri, this.getUrl());
       media.segmentIndexRange = null;
 
       log(media)
@@ -134,7 +135,7 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
 
       const endTime = startTime + segment.duration;
 
-      console.log(this)
+      //console.log(this)
 
       const mediaSegment = new MediaSegment(
         //new MediaLocator(segment.uri, null, startTime, endTime)
