@@ -6,9 +6,17 @@ export type MediaClockTime = number
 
 export class MediaLocator {
 
-  static fromRelativeURI(relativeUri: string, baseUri?: string, byteRange?: ByteRange) {
+  static fromRelativeURI(
+      relativeUri: string,
+      baseUri?: string,
+      byteRange?: ByteRange,
+      startTime?: MediaClockTime,
+      endTime?: MediaClockTime): MediaLocator {
+
     return new MediaLocator(
-      resolveUri(relativeUri, baseUri)
+      resolveUri(relativeUri, baseUri),
+      byteRange,
+      startTime, endTime
     )
   }
 
@@ -27,6 +35,8 @@ export class MediaLocator {
     this.startTime = startTime
     this.endTime = endTime
     this.byteRange = byteRange
+
+    // FIXME: check that we have an absolute and valid URL here
   }
 
   toURLObject(): URLObject {

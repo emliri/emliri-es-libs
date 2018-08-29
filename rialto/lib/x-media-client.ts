@@ -1,4 +1,4 @@
-import { AdaptiveMediaClientPlugin } from "./adaptive-media-client-plugin";
+import { AdaptiveMediaClient, AdaptiveMediaStreamConsumer } from "./adaptive-media-client";
 import { AdaptiveMedia, AdaptiveMediaSet, AdaptiveMediaPeriod } from "./adaptive-media";
 
 import { Scheduler } from '../../objec-ts/lib/scheduler';
@@ -11,9 +11,8 @@ import { MediaSegment } from "./media-segment";
 const { log } = getLogger("x-media-client");
 
 const SCHEDULER_FRAMERATE: number = 1;
-const MAX_CONCURRENT_FETCH_INIT: number = 4;
 
-export class XMediaClient extends AdaptiveMediaClientPlugin {
+export class XMediaClient extends AdaptiveMediaClient {
 
   scheduler: Scheduler = new Scheduler(SCHEDULER_FRAMERATE);
 
@@ -67,9 +66,7 @@ export class XMediaClient extends AdaptiveMediaClientPlugin {
     return Promise.resolve(true);
   }
 
-  enableMediaSet(set: AdaptiveMediaSet) {
-
-  }
+  enableMediaSet(set: AdaptiveMediaSet) {}
 
   private _onSegmentBuffered(segment: MediaSegment) {
 
@@ -80,52 +77,3 @@ export class XMediaClient extends AdaptiveMediaClientPlugin {
 
 }
 
-class AdaptiveMediaStreamConsumer {
-
-  private _adaptiveMedia: AdaptiveMedia;
-  private _scheduler: Scheduler;
-  private _fetchTarget: number;
-  private _maxConcurrentFetchInit: number = MAX_CONCURRENT_FETCH_INIT;
-  private _onSegmentBufferedCb: (segment: MediaSegment) => void;
-
-  constructor(adaptiveMedia: AdaptiveMedia, scheduler: Scheduler, onSegmentBuffered: (segment: MediaSegment) => void) {
-    this._adaptiveMedia = adaptiveMedia;
-    this._scheduler = scheduler;
-    this._onSegmentBufferedCb = onSegmentBuffered;
-  }
-
-  updateFetchTarget(seconds: number) {
-    this._fetchTarget = seconds;
-
-    this._onFetchTargetUpdated();
-  }
-
-  private _onFetchTargetUpdated() {
-
-    log('_onFetchTargetUpdated');
-
-    const fetchTarget = this._fetchTarget;
-    const maxConcurrentFetch = this._maxConcurrentFetchInit;
-
-    let fetchInitCount: number = 0;
-
-    this._adaptiveMedia.segments.forEach((segment) => {
-
-      if (fetchInitCount >= maxConcurrentFetch) {
-        return;
-      }
-      if (segment.endTime > fetchTarget) {
-        return;
-      }
-      if (!segment.hasBuffer) {
-        log('init fetch for segment:', segment.uri);
-        segment.fetch()
-          .then(() => {
-            this._onSegmentBufferedCb(segment);
-          })
-        fetchInitCount++;
-      }
-    });
-  }
-
-}

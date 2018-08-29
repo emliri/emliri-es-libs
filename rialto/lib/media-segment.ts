@@ -39,7 +39,7 @@ export class MediaSegment extends Resource implements MediaContainer, Decryptabl
   mediaContainerInfo: MediaContainerInfo = new MediaContainerInfo()
 
   constructor(locator: MediaLocator, mimeType: string = null, cached = false) {
-    super(locator.uri, locator.byteRange, mimeType)
+    super(locator.uri, locator.byteRange, null, mimeType)
 
     this.cached = cached
     this.locator_ = locator

@@ -1,6 +1,8 @@
-import {MediaSegment} from './media-segment'
-
 import { CloneableScaffold } from "./cloneable";
+
+import {Set} from "../../objec-ts/lib/es6-set";
+
+import {MediaSegment} from './media-segment'
 
 import {
   VideoInfo,
@@ -11,7 +13,9 @@ import {
   MediaContainerInfo,
   MediaTypeSet
 } from './media-container-info'
+
 import { ByteRange } from './byte-range';
+import { AdaptiveMediaEngine } from './adaptive-media-client';
 
 /**
  * Essentially, a sequence of media segments that can be consumed as a stream.
@@ -102,6 +106,7 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     if (this.mediaEngine) {
       return this.mediaEngine.activateMediaStream(this)
     }
+    return false;
   }
 }
 
@@ -146,9 +151,4 @@ export class AdaptiveMediaPeriod {
       mediaSet.mediaContainerInfo.intersectsMediaTypeSet(mediaTypeFlags, identical)
     )
   }
-}
-
-export interface AdaptiveMediaEngine {
-  enableMediaSet(set: AdaptiveMediaSet)
-  activateMediaStream(stream: AdaptiveMedia): Promise<boolean>
 }

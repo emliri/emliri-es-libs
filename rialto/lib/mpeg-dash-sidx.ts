@@ -74,7 +74,7 @@ export const parseSidxData = (data: Uint8Array, parsedSidx: MpegDashSidx): MpegD
 
     if (referenceType === 1) {
       console.warn('SIDX has hierarchical references (not supported)');
-      return;
+      return null;
     }
 
     const subsegmentDuration = readUint32(sidx.data, referenceIndex);

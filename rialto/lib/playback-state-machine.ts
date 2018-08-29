@@ -102,7 +102,7 @@ export class PlaybackStateMachine extends EventEmitter {
     })
   }
 
-  static lookupStateOfMediaElement(mediaEl) {
+  static lookupStateOfMediaElement(mediaEl): PlaybackState {
     const States = PlaybackState
 
     if (mediaEl.error) {
@@ -125,6 +125,9 @@ export class PlaybackStateMachine extends EventEmitter {
       case 3:
       case 4:
         return mediaEl.paused ? States.PAUSED : States.PLAYING
+      default:
+        console.error("Unable to lookup media element state");
+        return States.NULL;
     }
   }
 

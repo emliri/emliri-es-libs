@@ -73,7 +73,7 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
       this._processMasterPlaylist();
     } else if(manifest.segments && manifest.segments.length) {
       this._fileType = HlsM3u8FileType.MEDIA;
-      this._processMediaPlaylist();
+      this._processMediaVariantPlaylist();
     } else {
       throw new Error('Could not determine type of HLS playlist');
     }
@@ -104,11 +104,11 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
 
       this._adaptiveMediaSet.add(media);
 
-      const hlsMediPlaylistFile =
+      const hlsMediaPlaylistFile =
         new HlsM3u8File(media.segmentIndexUri, HlsM3u8FileType.MEDIA, this.getUrl());
 
       const hlsMediaPlaylist = new HlsM3u8MediaPlaylist(
-        hlsMediPlaylistFile
+        hlsMediaPlaylistFile
       );
 
       this._hlsMediaPlaylists.push(hlsMediaPlaylist);
@@ -122,7 +122,7 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
     });
   }
 
-  private _processMediaPlaylist() {
+  private _processMediaVariantPlaylist() {
     log('parsing media playlist');
 
     const media: AdaptiveMedia = new AdaptiveMedia();
@@ -134,8 +134,11 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
 
       const endTime = startTime + segment.duration;
 
+      console.log(this)
+
       const mediaSegment = new MediaSegment(
-        new MediaLocator(segment.uri, null, startTime, endTime)
+        //new MediaLocator(segment.uri, null, startTime, endTime)
+        MediaLocator.fromRelativeURI(segment.uri, this.getUrl())
       );
 
       media.segments.push(mediaSegment);

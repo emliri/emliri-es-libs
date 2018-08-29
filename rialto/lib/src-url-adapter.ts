@@ -1,4 +1,4 @@
-class URLMediaSource {
+export class SourceUrlAdapter {
 
   private mediaSource_: MediaSource;
   private url_: string;
