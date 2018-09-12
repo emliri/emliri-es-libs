@@ -9,6 +9,7 @@ import {AdaptiveMediaPeriod, AdaptiveMediaSet, AdaptiveMedia} from './adaptive-m
 import {getLogger, LoggerLevels} from './logger'
 import { MediaSegment, MediaLocator } from '..';
 import { resolveUri } from './url';
+import { start } from 'repl';
 
 const {
   log,
@@ -138,8 +139,7 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
       //console.log(this)
 
       const mediaSegment = new MediaSegment(
-        //new MediaLocator(segment.uri, null, startTime, endTime)
-        MediaLocator.fromRelativeURI(segment.uri, this.getUrl())
+        MediaLocator.fromRelativeURI(segment.uri, this.getUrl(), null, startTime, endTime)
       );
 
       media.segments.push(mediaSegment);

@@ -4,6 +4,13 @@ export class Queue<T> extends EventEmitter {
 
   private _list: T[] = []
 
+  /**
+   * Returns a copy of the internal array
+   */
+  getArray(): Array<T> {
+    return this._list.slice(0);
+  }
+
   get size() {
     return this._list.length
   }
@@ -36,6 +43,13 @@ export class Queue<T> extends EventEmitter {
    */
   subtract(): T {
     return this._list.pop()
+  }
+
+  /**
+   * Alias for subtract method
+   */
+  pop(): T {
+    return this.subtract();
   }
 
   /**
@@ -72,7 +86,7 @@ export class Queue<T> extends EventEmitter {
     return rmCnt
   }
 
-  removeOne(item): boolean {
+  removeOne(item: T): boolean {
     return !! this.removeAll(item, 1)
   }
 
@@ -83,5 +97,9 @@ export class Queue<T> extends EventEmitter {
   forEach(forEachFn: (item, index?) => void): Queue<T> {
     this._list.forEach(forEachFn)
     return this
+  }
+
+  containsAtLeastOnce(item: T) {
+    return this._list.indexOf(item) >= 0;
   }
 }

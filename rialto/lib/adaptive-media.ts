@@ -68,6 +68,8 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
   segmentIndexRange: ByteRange;
   segmentIndexProvider: () => Promise<MediaSegment[]>
 
+  getUrl(): string { return this.segmentIndexUri || null; }
+
   /**
    * If this is an alternate rendition media for example in HLS the group-ID,
    * it is what may be used to group various media together into a set
@@ -127,6 +129,9 @@ export class AdaptiveMediaPeriod {
 
   sets: AdaptiveMediaSet[] = [];
 
+  /**
+   * @returns The default media if advertised, or falls back on first media representation of the first set
+   */
   getDefaultMedia(): AdaptiveMedia {
     if (this.sets[0].size === 0) {
       throw new Error('No default media found');

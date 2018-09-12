@@ -6,8 +6,8 @@ export interface IResourceRequest {
   wasSuccessful(): boolean;
 
   readonly xhrState: XHRState;
-  readonly responseData: XHRData;
 
+  readonly responseData: XHRData;
   readonly responseHeaders: object;
 
   readonly loadedBytes: number;
@@ -22,10 +22,10 @@ export interface IResourceRequest {
   readonly secondsUntilHeaders: number;
 }
 
-export type RequestCallbackFunction = (req: IResourceRequest, isProgressUpdate: boolean) => void;
+export type ResourceRequestCallback = (req: IResourceRequest, isProgressUpdate: boolean) => void;
 
 export type ResourceRequestOptions = Partial<{
-  requestCallback: RequestCallbackFunction,
+  requestCallback: ResourceRequestCallback,
   method: XHRMethod,
   responseType: XHRResponseType,
   byteRange: ByteRange,

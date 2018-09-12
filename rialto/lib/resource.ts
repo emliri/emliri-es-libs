@@ -7,11 +7,9 @@ import {
 } from './url'
 
 import {
-  XHR,
   XHRMethod,
   XHRResponseType,
   XHRState,
-  XHRStatusCategory
 } from './xhr'
 
 import {ByteRange} from './byte-range'
@@ -20,10 +18,11 @@ import { ResourceRequestMaker, IResourceRequest, makeDefaultRequest } from './re
 export enum ResourceEvents {
   BUFFER_SET = 'buffer:set',
   BUFFER_CLEAR = 'buffer:clear',
-  FETCH_PROGRESS = 'fetch:progres',
+  FETCH_PROGRESS = 'fetch:progress',
   FETCH_ABORTED = 'fetch:aborted',
   FETCH_ERRORED = 'fetch:errored',
-  FETCH_SUCCEEDED = 'fetch:succeeded'
+  FETCH_SUCCEEDED = 'fetch:succeeded',
+  FETCH_SUCCEEDED_NOT = 'fetch:succeeded-not',
 }
 
 export interface ParseableResource<ParsingResultType> extends Resource {
@@ -51,7 +50,10 @@ export class Resource extends EventEmitter {
   private fetchAttemptCnt_: number;
 
   private requestMaker_: ResourceRequestMaker | null = null;
-  private xhr_: IResourceRequest = null;
+  private request_: IResourceRequest = null;
+
+  private requestBytesLoaded_: number = NaN;
+  private requestBytesTotal_: number = NaN;
 
   private mimeType_: string // TODO: set this from response headers;
 
@@ -79,7 +81,7 @@ export class Resource extends EventEmitter {
     this.abortedCnt_ = 0
     this.fetchAttemptCnt_ = 0
 
-    this.xhr_ = null
+    this.request_ = null
   }
 
   get uri(): string {
@@ -115,12 +117,16 @@ export class Resource extends EventEmitter {
   }
 
   get isFetching(): boolean {
-    return !! this.xhr_
+    return !! this.request_
   }
 
   get fetchLatency(): number {
     return this.fetchLatency_
   }
+
+  get requestedBytesLoaded(): number { return this.requestBytesLoaded_ };
+
+  get requestedBytesTotal(): number { return this.requestBytesTotal_ };
 
   setBaseUri(baseUri: string) {
     this.baseUri_ = baseUri;
@@ -163,8 +169,10 @@ export class Resource extends EventEmitter {
 
     const makeRequest = this.getRequestMaker();
 
-    this.xhr_ = makeRequest(url, {
-      requestCallback: this.onXHRCallback_.bind(this),
+    this.requestBytesLoaded_ = NaN;
+    this.requestBytesTotal_ = NaN;
+    this.request_ = makeRequest(url, {
+      requestCallback: this.onRequestCallback_.bind(this),
       method: XHRMethod.GET,
       responseType: XHRResponseType.ARRAY_BUFFER,
       byteRange: this.byteRange
@@ -175,7 +183,7 @@ export class Resource extends EventEmitter {
 
   abort() {
     this.abortedCnt_++
-    this.xhr_.abort()
+    this.request_.abort()
   }
 
   /**
@@ -193,46 +201,57 @@ export class Resource extends EventEmitter {
     return makeDefaultRequest;
   }
 
-  private onXHRCallback_(xhr: IResourceRequest, isProgressUpdate: boolean) {
+  setExternalyFetchedBytes(loaded: number, total: number) {
+    this.requestBytesLoaded_ = loaded;
+    this.requestBytesTotal_ = total;
+    this.emit(ResourceEvents.FETCH_PROGRESS);
+  }
+
+  private onRequestCallback_(request: IResourceRequest, isProgressUpdate: boolean) {
 
     if (isProgressUpdate) {
-      this.emit(ResourceEvents.FETCH_PROGRESS)
+      this.requestBytesLoaded_ = this.request_.loadedBytes;
+      this.requestBytesTotal_ = this.request_.totalBytes;
+      this.emit(ResourceEvents.FETCH_PROGRESS, this.request_.loadedBytes, this.request_.totalBytes);
       return
     }
 
-    if (xhr.hasBeenAborted) {
+    if (request.hasBeenAborted) {
       this.emit(ResourceEvents.FETCH_ABORTED)
 
       this.fetchReject_(new Error('Fetching media segment was aborted'))
     }
 
-    if (xhr.hasErrored) {
+    if (request.hasErrored) {
       this.emit(ResourceEvents.FETCH_ERRORED)
 
-      this.fetchReject_(xhr.error)
+      this.fetchReject_(request.error)
     }
 
-    if (xhr.xhrState === XHRState.DONE) {
-      if (xhr.wasSuccessful()) {
-        this.setBuffer(<ArrayBuffer> xhr.responseData)
+    if (request.xhrState === XHRState.DONE) {
+      if (request.wasSuccessful()) {
+        this.setBuffer(<ArrayBuffer> request.responseData)
         this.fetchResolve_(this)
         this.emit(ResourceEvents.FETCH_SUCCEEDED)
+      } else {
+        // this.fetchReject_(); // reject or just let time-out in case?
+        this.emit(ResourceEvents.FETCH_SUCCEEDED_NOT);
       }
 
-      this.fetchLatency_ = xhr.secondsUntilDone
+      this.fetchLatency_ = request.secondsUntilDone
 
       // reset fetch promise hooks
       this.fetchReject_ = null
       this.fetchResolve_ = null
 
       // XHR object is done and over, let's get rid of it
-      this.xhr_ = null
+      this.request_ = null
 
-    } else if (xhr.xhrState === XHRState.LOADING) {
-      this.fetchLatency_ = xhr.secondsUntilLoading
-    } else if (xhr.xhrState === XHRState.HEADERS_RECEIVED) {
-      this.fetchLatency_ = xhr.secondsUntilHeaders
-    } else if (xhr.xhrState === XHRState.OPENED) {
+    } else if (request.xhrState === XHRState.LOADING) {
+      this.fetchLatency_ = request.secondsUntilLoading
+    } else if (request.xhrState === XHRState.HEADERS_RECEIVED) {
+      this.fetchLatency_ = request.secondsUntilHeaders
+    } else if (request.xhrState === XHRState.OPENED) {
       //
     }
   }
