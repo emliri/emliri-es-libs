@@ -66,7 +66,7 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
     parser.push(text);
     parser.end();
 
-    console.log(parser.manifest);
+    //console.log(parser.manifest);
 
     const manifest = this._m3u8ParserResult = parser.manifest;
 
@@ -194,7 +194,7 @@ export class HlsM3u8MediaPlaylist extends Resource implements ParseableResource<
     return this._file.parse()
       .then((adaptiveMediaPeriods) => {
 
-        console.log(adaptiveMediaPeriods)
+        //console.log(adaptiveMediaPeriods)
 
         // We assume that the embedded file object
         // only parsed exactly one adaptive-media list

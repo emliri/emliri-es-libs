@@ -13,7 +13,8 @@ export type XMLRootObject = {
 }
 
 export function parseXmlData(data: string): XMLRootObject {
-  return xml2js(data, {
+  // TODO: xml-js has own @types now!!
+  return <XMLRootObject> xml2js(data, {
     compact: false
   })
 }
