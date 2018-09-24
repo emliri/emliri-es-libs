@@ -63,7 +63,7 @@ export class MediaElementController {
 
   private _execPlay(item: MediaPlayerActionQueueItem) {
     this._mediaEl.play().then(() => {
-      console.log('play promise resolved')
+      //console.log('play promise resolved')
       item.callback(true);
     }).catch((err) => {
       item.callback(false, err);
@@ -298,7 +298,7 @@ export class MediaPlayer {
   }
 
   private onMediaElementEventTranslatedCb_(mediaSession, eventReason) {
-    console.log(eventReason)
+    //console.log(eventReason)
   }
 
   private takeMediaElement_(mediaElement: HTMLMediaElement) {

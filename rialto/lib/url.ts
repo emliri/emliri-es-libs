@@ -14,11 +14,13 @@ import {
  * @see https://developer.mozilla.org/en-US/docs/Web/API/URL
  * @see https://www.npmjs.com/package/url-polyfill (relying on this for now as implementation shim)
  */
+/*
 export class URLObject extends URL {
   constructor(uri: string, base: string = null) {
     super(uri, base || undefined)
   }
 }
+*/
 
 export function resolveUri(relativeUri: string, baseUri: string): string {
 

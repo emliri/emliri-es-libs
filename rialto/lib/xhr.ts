@@ -11,6 +11,8 @@ import {ByteRange} from './byte-range'
 import {getLogger} from './logger'
 import { IResourceRequest } from './resource-request';
 
+import {utf8StringToArray} from './bytes-read-write';
+
 const {
   log
 } = getLogger('xhr')
@@ -55,11 +57,11 @@ export enum XHRResponseType {
 }
 
 export enum XHRState {
-  UNSENT = XMLHttpRequest.UNSENT,
-  OPENED = XMLHttpRequest.OPENED,
-  HEADERS_RECEIVED = XMLHttpRequest.HEADERS_RECEIVED,
-  LOADING = XMLHttpRequest.LOADING,
-  DONE = XMLHttpRequest.DONE
+  UNSENT = XMLHttpRequest.UNSENT || 0,
+  OPENED = XMLHttpRequest.OPENED || 1,
+  HEADERS_RECEIVED = XMLHttpRequest.HEADERS_RECEIVED || 2,
+  LOADING = XMLHttpRequest.LOADING || 3,
+  DONE = XMLHttpRequest.DONE || 4
 }
 
 export enum XHRStatusCategory {
@@ -272,6 +274,9 @@ export class XHR implements IResourceRequest {
   }
 
   get responseData(): XHRData {
+    if (this.responseText) {
+      return utf8StringToArray(this.responseText)
+    }
     return this._xhr.response
   }
 
@@ -335,6 +340,7 @@ export class XHR implements IResourceRequest {
   }
 
   private onReadyStateChange() {
+
     const xhr = this._xhr
 
     this._state = xhr.readyState

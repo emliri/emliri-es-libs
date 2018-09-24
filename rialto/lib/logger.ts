@@ -40,11 +40,11 @@ export const getLogger = function(category: string, level: number = LoggerLevels
     }
 
     return {
-        info: level >= LoggerLevels.INFO ? window.console.info.bind(window.console, getPrefix('i', category)) : noop,
-        log: level >= LoggerLevels.LOG ? window.console.log.bind(window.console, getPrefix('l', category)) : noop,
-        debug: level >= LoggerLevels.DEBUG ? window.console.debug.bind(window.console, getPrefix('d', category)) : noop,
-        warn: level >= LoggerLevels.WARN ? window.console.warn.bind(window.console, getPrefix('w', category)) : noop,
-        error: level >= LoggerLevels.ERROR ? window.console.error.bind(window.console, getPrefix('e', category)) : noop
+        info: level >= LoggerLevels.INFO ? console.info.bind(console, getPrefix('i', category)) : noop,
+        log: level >= LoggerLevels.LOG ? console.log.bind(console, getPrefix('l', category)) : noop,
+        debug: level >= LoggerLevels.DEBUG ? console.debug.bind(console, getPrefix('d', category)) : noop,
+        warn: level >= LoggerLevels.WARN ? console.warn.bind(console, getPrefix('w', category)) : noop,
+        error: level >= LoggerLevels.ERROR ? console.error.bind(console, getPrefix('e', category)) : noop
     }
 };
 

@@ -3,7 +3,7 @@ import {EventEmitter} from 'eventemitter3'
 
 import {
   resolveUri,
-  URLObject
+  //URLObject
 } from './url'
 
 import {
@@ -142,9 +142,11 @@ export class Resource extends EventEmitter {
     return resolveUri(this.uri, base ? base : this.baseUri_)
   }
 
+  /*
   getURLObject(): URLObject {
     return new URLObject(this.getUrl())
   }
+  */
 
   setBuffer(ab: ArrayBuffer): void {
     this.ab_ = ab
@@ -201,44 +203,31 @@ export class Resource extends EventEmitter {
     return makeDefaultRequest;
   }
 
-  setExternalyFetchedBytes(loaded: number, total: number) {
+  setExternalyFetchedBytes(loaded: number, total: number, latency: number) {
     this.requestBytesLoaded_ = loaded;
     this.requestBytesTotal_ = total;
+    this.fetchLatency_ = latency;
     this.emit(ResourceEvents.FETCH_PROGRESS);
   }
 
   private onRequestCallback_(request: IResourceRequest, isProgressUpdate: boolean) {
 
-    if (isProgressUpdate) {
-      this.requestBytesLoaded_ = this.request_.loadedBytes;
-      this.requestBytesTotal_ = this.request_.totalBytes;
-      this.emit(ResourceEvents.FETCH_PROGRESS, this.request_.loadedBytes, this.request_.totalBytes);
-      return
-    }
-
-    if (request.hasBeenAborted) {
-      this.emit(ResourceEvents.FETCH_ABORTED)
-
-      this.fetchReject_(new Error('Fetching media segment was aborted'))
-    }
-
-    if (request.hasErrored) {
-      this.emit(ResourceEvents.FETCH_ERRORED)
-
-      this.fetchReject_(request.error)
-    }
+    //console.log('onRequestCallback', request.xhrState, XHRState.DONE)
 
     if (request.xhrState === XHRState.DONE) {
+
+      this.fetchLatency_ = request.secondsUntilDone
+
       if (request.wasSuccessful()) {
+        //console.log('data', request.responseData)
         this.setBuffer(<ArrayBuffer> request.responseData)
+        //console.log('resolve')
         this.fetchResolve_(this)
         this.emit(ResourceEvents.FETCH_SUCCEEDED)
       } else {
         // this.fetchReject_(); // reject or just let time-out in case?
         this.emit(ResourceEvents.FETCH_SUCCEEDED_NOT);
       }
-
-      this.fetchLatency_ = request.secondsUntilDone
 
       // reset fetch promise hooks
       this.fetchReject_ = null
@@ -253,6 +242,24 @@ export class Resource extends EventEmitter {
       this.fetchLatency_ = request.secondsUntilHeaders
     } else if (request.xhrState === XHRState.OPENED) {
       //
+    }
+
+    if (isProgressUpdate) {
+      this.requestBytesLoaded_ = this.request_.loadedBytes;
+      this.requestBytesTotal_ = this.request_.totalBytes;
+      this.emit(ResourceEvents.FETCH_PROGRESS, this.request_.loadedBytes, this.request_.totalBytes);
+    }
+
+    if (request.hasBeenAborted) {
+      this.emit(ResourceEvents.FETCH_ABORTED)
+
+      this.fetchReject_(new Error('Fetching media segment was aborted'))
+    }
+
+    if (request.hasErrored) {
+      this.emit(ResourceEvents.FETCH_ERRORED)
+
+      this.fetchReject_(request.error)
     }
   }
 

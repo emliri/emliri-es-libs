@@ -44,7 +44,7 @@ export class XMediaClient extends AdaptiveMediaClient {
 
         media.refresh().then((media: AdaptiveMedia) => {
 
-          console.log(media.segments);
+          //console.log(media.segments);
 
           const consumer: AdaptiveMediaStreamConsumer =
             new AdaptiveMediaStreamConsumer(media, this.scheduler, (segment: MediaSegment) => {

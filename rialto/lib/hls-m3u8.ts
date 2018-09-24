@@ -7,7 +7,8 @@ import {ByteRange} from './byte-range'
 import {AdaptiveMediaPeriod, AdaptiveMediaSet, AdaptiveMedia} from './adaptive-media'
 
 import {getLogger, LoggerLevels} from './logger'
-import { MediaSegment, MediaLocator } from '..';
+import { MediaSegment } from './media-segment';
+import { MediaLocator } from './media-locator';
 import { resolveUri } from './url';
 import { start } from 'repl';
 
@@ -62,6 +63,8 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
     const text = String.fromCharCode.apply(null, new Uint8Array(buf));
 
     const parser: any = new m3u8Parser.Parser();
+
+    //console.log('m3u8:', text)
 
     parser.push(text);
     parser.end();
@@ -132,7 +135,7 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
     let startTime: number = 0;
 
     this._m3u8ParserResult.segments.forEach((segment: any) => {
-      console.log(segment);
+      //console.log(segment);
 
       const endTime = startTime + segment.duration;
 

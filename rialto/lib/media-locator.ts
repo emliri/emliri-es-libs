@@ -1,6 +1,8 @@
 import {ByteRange} from './byte-range'
 
-import {URLObject, resolveUri} from './url'
+import {
+  //URLObject,
+  resolveUri} from './url'
 
 export type MediaClockTime = number
 
@@ -39,7 +41,9 @@ export class MediaLocator {
     // FIXME: check that we have an absolute and valid URL here
   }
 
+  /*
   toURLObject(): URLObject {
     return new URLObject(this.uri)
   }
+  */
 }
