@@ -11,6 +11,7 @@ import { MediaSegment } from './media-segment';
 import { MediaLocator } from './media-locator';
 import { resolveUri } from './url';
 import { start } from 'repl';
+import { utf8BytesToString } from './bytes-read-write';
 
 const {
   log,
@@ -60,16 +61,14 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
       return Promise.resolve(this._periods);
     }
 
-    const text = String.fromCharCode.apply(null, new Uint8Array(buf));
+    const text = utf8BytesToString(new Uint8Array(buf))
 
     const parser: any = new m3u8Parser.Parser();
-
-    //console.log('m3u8:', text)
 
     parser.push(text);
     parser.end();
 
-    //console.log(parser.manifest);
+    console.log(parser.manifest);
 
     const manifest = this._m3u8ParserResult = parser.manifest;
 
@@ -105,8 +104,6 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
       media.segmentIndexUri = resolveUri(playlist.uri, this.getUrl());
       media.segmentIndexRange = null;
 
-      log(media)
-
       this._adaptiveMediaSet.add(media);
 
       const hlsMediaPlaylistFile =
@@ -132,20 +129,24 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
 
     const media: AdaptiveMedia = new AdaptiveMedia();
 
+    const hlsMediaPlaylist = new HlsM3u8MediaPlaylist(this);
+
     let startTime: number = 0;
 
     this._m3u8ParserResult.segments.forEach((segment: any) => {
-      //console.log(segment);
-
       const endTime = startTime + segment.duration;
-
-      //console.log(this)
 
       const mediaSegment = new MediaSegment(
         MediaLocator.fromRelativeURI(segment.uri, this.getUrl(), null, startTime, endTime)
       );
 
       media.segments.push(mediaSegment);
+
+      media.segmentIndexProvider = () => {
+        return hlsMediaPlaylist.fetch()
+          .then(() =>  hlsMediaPlaylist.parse())
+          .then((adaptiveMedia: AdaptiveMedia) => adaptiveMedia.segments)
+      }
 
       startTime = endTime;
     });

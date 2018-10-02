@@ -45,3 +45,4 @@ export function utf8StringToArray(str: string): ArrayBuffer {
   }
   return buf;
 }
+

@@ -13,7 +13,7 @@ import {
 } from './xhr'
 
 import {ByteRange} from './byte-range'
-import { ResourceRequestMaker, IResourceRequest, makeDefaultRequest } from './resource-request';
+import { ResourceRequestMaker, IResourceRequest, makeDefaultRequest, ResourceRequestResponseData } from './resource-request';
 
 export enum ResourceEvents {
   BUFFER_SET = 'buffer:set',
@@ -51,6 +51,8 @@ export class Resource extends EventEmitter {
 
   private requestMaker_: ResourceRequestMaker | null = null;
   private request_: IResourceRequest = null;
+
+  private requestResponseData_: ResourceRequestResponseData[] = [];
 
   private requestBytesLoaded_: number = NaN;
   private requestBytesTotal_: number = NaN;
@@ -203,6 +205,25 @@ export class Resource extends EventEmitter {
     return makeDefaultRequest;
   }
 
+  getRequestResponses(): ResourceRequestResponseData[] {
+    return this.requestResponseData_;
+  }
+
+  flushAllRequestResponses(): void {
+    this.requestResponseData_ = [];
+  }
+
+  getRequestResponse(pop: boolean = false) {
+    if (pop) {
+      return this.requestResponseData_.pop();
+    } else {
+      if (this.requestResponseData_.length === 0) {
+        throw new Error('No response datas for resources');
+      }
+      return this.requestResponseData_[this.requestResponseData_.length - 1];
+    }
+  }
+
   setExternalyFetchedBytes(loaded: number, total: number, latency: number) {
     this.requestBytesLoaded_ = loaded;
     this.requestBytesTotal_ = total;
@@ -219,8 +240,10 @@ export class Resource extends EventEmitter {
       this.fetchLatency_ = request.secondsUntilDone
 
       if (request.wasSuccessful()) {
+        const response = new ResourceRequestResponseData(request, this)
+        this.requestResponseData_.push(response);
         //console.log('data', request.responseData)
-        this.setBuffer(<ArrayBuffer> request.responseData)
+        this.setBuffer(response.getArrayBuffer())
         //console.log('resolve')
         this.fetchResolve_(this)
         this.emit(ResourceEvents.FETCH_SUCCEEDED)

@@ -66,7 +66,7 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
    */
   segmentIndexUri: string;
   segmentIndexRange: ByteRange;
-  segmentIndexProvider: () => Promise<MediaSegment[]>
+  segmentIndexProvider: () => Promise<MediaSegment[]> = null;
 
   getUrl(): string { return this.segmentIndexUri || null; }
 
@@ -91,12 +91,12 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
    * Refresh/enrich media segments (e.g for external segment indices and for live)
    */
   refresh(): Promise<AdaptiveMedia> {
+    if (!this.segmentIndexProvider) {
+      return Promise.reject("No segment index provider set");
+    }
     return this.segmentIndexProvider()
       .then((newSegments) => {
         Array.prototype.push.apply(this.segments, newSegments);
-        //this.segments =
-
-        //this.segments = this.segments.concat(newSegments);
         return this;
       })
   }
