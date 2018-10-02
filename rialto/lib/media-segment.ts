@@ -1,7 +1,7 @@
 import {Resource, DecryptableResource, ParseableResource} from './resource'
 
 import {mediaCacheInstance} from './media-cache'
-import {MediaLocator} from './media-locator'
+import {MediaLocator, MediaClockTime} from './media-locator'
 
 import {
   VideoInfo,
@@ -13,6 +13,7 @@ import {
 } from './media-container-info'
 
 import {getLogger} from './logger'
+import { TimeInterval } from './time-intervals';
 
 const {
   log
@@ -53,11 +54,19 @@ export class MediaSegment extends Resource implements MediaContainer, Decryptabl
     return null
   }
 
-  get startTime(): number {
+  getTimeInterval(): TimeInterval {
+    return new TimeInterval(this.startTime, this.endTime);
+  }
+
+  get duration(): MediaClockTime {
+    return this.endTime - this.startTime;
+  }
+
+  get startTime(): MediaClockTime {
     return this.locator_.startTime
   }
 
-  get endTime(): number {
+  get endTime(): MediaClockTime {
     return this.locator_.endTime
   }
 }

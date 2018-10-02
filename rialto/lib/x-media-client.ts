@@ -40,24 +40,19 @@ export class XMediaClient extends AdaptiveMediaClient {
     const m3u8 = new HlsM3u8File(url);
     m3u8.fetch().then(() => {
       m3u8.parse().then((adaptiveMediaPeriods: AdaptiveMediaPeriod[]) => {
-        const media: AdaptiveMedia = adaptiveMediaPeriods[0].getDefaultMedia();
+        const media: AdaptiveMedia = adaptiveMediaPeriods[0].getDefaultSet().getDefaultMedia();
 
         media.refresh().then((media: AdaptiveMedia) => {
 
-          //console.log(media.segments);
-
           const consumer: AdaptiveMediaStreamConsumer =
-            new AdaptiveMediaStreamConsumer(media, this.scheduler, (segment: MediaSegment) => {
+            new AdaptiveMediaStreamConsumer(media, (segment: MediaSegment) => {
               this._onSegmentBuffered(segment);
             });
 
           this.streams.push(consumer);
 
-          this.mediaSourceController.addSourceBufferQueue('video/mp4; codecs="avc1.4dc032,mp4a.40.2"'); // TODO
-
-          consumer.updateFetchTarget(5);
+          this.mediaSourceController.addSourceBufferQueue('video/mp4; codecs="avc1.4dc032,mp4a.40.2"');
         });
-
       });
     });
   }

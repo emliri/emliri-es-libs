@@ -203,7 +203,7 @@ export class HlsM3u8MediaPlaylist extends Resource implements ParseableResource<
         // We assume that the embedded file object
         // only parsed exactly one adaptive-media list
         // and has one period (usually the case with HLS :))
-        return adaptiveMediaPeriods[0].getDefaultMedia();
+        return adaptiveMediaPeriods[0].getDefaultSet().getDefaultMedia()
       })
   }
 

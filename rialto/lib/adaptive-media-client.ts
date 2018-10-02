@@ -1,9 +1,10 @@
 import { AdaptiveMedia, AdaptiveMediaSet } from "./adaptive-media";
 import { MediaSegment } from "./media-segment";
-import { Scheduler } from "../../objec-ts/lib/scheduler";
+import { TimeIntervalContainer, TimeInterval } from './time-intervals';
+//import { Scheduler } from "../../objec-ts/lib/scheduler";
 import { getLogger } from "./logger";
 
-const { log } = getLogger("adaptive-media-client");
+const { log, error } = getLogger("adaptive-media-client");
 
 export abstract class AdaptiveMediaClient implements AdaptiveMediaEngine {
 
@@ -31,71 +32,61 @@ export interface AdaptiveMediaEngine {
   activateMediaStream(stream: AdaptiveMedia): Promise<boolean>
 }
 
-const SCHEDULER_FRAMERATE: number = 1;
-const MAX_CONCURRENT_FETCH_INIT: number = 4;
-
-
 export class AdaptiveMediaStreamConsumer {
 
-  // TODO: use MediaSegmentQueue ?
+  private _fetchTargetRanges: TimeIntervalContainer = new TimeIntervalContainer();
 
-  private _adaptiveMedia: AdaptiveMedia = null;
-  private _scheduler: Scheduler = null;
-  private _fetchTarget: number = 0;
-  private _maxConcurrentFetchInit: number = MAX_CONCURRENT_FETCH_INIT;
-  private _onSegmentBufferedCb: (segment: MediaSegment) => void;
-
-  constructor(adaptiveMedia: AdaptiveMedia,
-            scheduler: Scheduler, onSegmentBuffered: (segment: MediaSegment) => void) {
-
-    this._adaptiveMedia = adaptiveMedia;
-    this._scheduler = scheduler;
-    this._onSegmentBufferedCb = onSegmentBuffered;
+  constructor(
+    private _adaptiveMedia: AdaptiveMedia,
+    private _onSegmentBufferedCb: (segment: MediaSegment) => void) {
   }
 
-  updateFetchTarget(seconds: number) {
-    this._fetchTarget = seconds;
-
-    this._onFetchTargetUpdated();
+  getFetchTargetRanges(): TimeIntervalContainer {
+    return this._fetchTargetRanges;
   }
 
-  get maxConcurrentFetchInit(): number { return this._maxConcurrentFetchInit };
-  set maxConcurrentFetchInit(n: number) { this._maxConcurrentFetchInit = n }
+  /**
+   *
+   * @param range pass `null` to just reset to clear range container
+   */
+  setFetchTargetRange(range: TimeInterval) {
+    this._fetchTargetRanges.clear();
+    if (range) {
+      this.addFetchTargetRange(range);
+    }
+  }
 
-  private _onFetchTargetUpdated() {
+  addFetchTargetRange(range: TimeInterval) {
+    this._fetchTargetRanges.add(range);
+    this._fetchTargetRanges = this._fetchTargetRanges.flatten();
+    this._onFetchTargetRangeChanged();
+  }
 
-    log('_onFetchTargetUpdated:', this._fetchTarget);
+  private _onFetchTargetRangeChanged() {
+    const mediaSeekableRange: TimeIntervalContainer = this._adaptiveMedia.getSeekableTimeRanges();
+    const fetchTargetRanges = this.getFetchTargetRanges();
 
-    const fetchTarget = this._fetchTarget;
-    const maxConcurrentFetch = this._maxConcurrentFetchInit;
+    log('fetch-target ranges window duration:', fetchTargetRanges.getWindowDuration())
 
-    let fetchInitCount: number = 0;
-    let abort = false;
+    if (!mediaSeekableRange.hasOverlappingRangesWith(fetchTargetRanges)) {
+      error('fetch target range does not overlap with media seekable range');
+      return;
+    }
 
-    this._adaptiveMedia.segments.forEach((segment) => {
+    this._fetchAllSegmentsInTargetRange();
+  }
 
-      if (abort) { return }
+  private _fetchAllSegmentsInTargetRange() {
+    const fetchTargetRanges = this.getFetchTargetRanges();
+    fetchTargetRanges.ranges.forEach((range) => {
+      const mediaSegments: MediaSegment[] = this._adaptiveMedia.findSegmentsForTimeRange(range, true);
 
-      if (fetchInitCount >= maxConcurrentFetch) {
-        return;
-      }
-      if (isNaN(segment.endTime)) {
-        console.error("Segment endTime is NaN");
-        abort = true;
-        return;
-      }
-      if (segment.startTime > fetchTarget) {
-        return;
-      }
-      if (!segment.hasBuffer && !segment.isFetching) {
-        log(`init fetch for segment in time-range: [${segment.startTime}, ${segment.endTime}]s, uri:`, segment.uri);
-
-        segment.fetch()
-          .then(() => {
-            this._onSegmentBufferedCb(segment);
-          })
-        fetchInitCount++;
-      }
+      mediaSegments.forEach((segment) => {
+        if (segment.isFetching || segment.hasData) {
+          return;
+        }
+        segment.fetch();
+      });
     });
   }
 

@@ -16,24 +16,27 @@ import {
 
 import { ByteRange } from './byte-range';
 import { AdaptiveMediaEngine } from './adaptive-media-client';
+import { MediaClockTime } from "./media-locator";
+import { TimeIntervalContainer, TimeInterval } from "./time-intervals";
 
 /**
  * Essentially, a sequence of media segments that can be consumed as a stream.
  *
- * Represents what people refer to as rendition, quality level or representation, or media playlist.
+ * Represents what people refer to as rendition, quality level or representation, or media "variant" playlist.
  *
  * Contains an array of segments and the metadata in common about these.
  */
 export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
 
   private _segments: MediaSegment[] = [];
+  private _timeRanges: TimeIntervalContainer = new TimeIntervalContainer();
+  private _lastRefreshAt: number = 0;
+  private _lastTimeRangesCreatedAt: number = 0;
 
-  constructor(mediaEngine: AdaptiveMediaEngine = null) {
-    super()
-    this.mediaEngine = mediaEngine
+  constructor(public mediaEngine: AdaptiveMediaEngine = null) {
+    super();
   }
 
-  mediaEngine: AdaptiveMediaEngine
   parent: AdaptiveMediaSet
 
   mimeType: string
@@ -87,6 +90,32 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     return this._segments;
   }
 
+  getEarliestTimestamp(): MediaClockTime {
+    if (!this._segments.length) {
+      return NaN;
+    }
+    return this._segments[0].startTime;
+  }
+
+  /**
+   * @returns duration as sum of all segment durations. will be equal to window duration
+   * if the media is gapless and has no time-plane discontinuities.
+   */
+  getCumulatedDuration(): MediaClockTime {
+    return this.getSeekableTimeRanges().getCumulatedDuration();
+  }
+
+  /**
+   * @returns duration as difference between last segment endTime and first segment startTime
+   */
+  getWindowDuration(): MediaClockTime {
+    return this.getSeekableTimeRanges().getWindowDuration();
+  }
+
+  get lastRefreshedAt(): number {
+    return this._lastRefreshAt;
+  }
+
   /**
    * Refresh/enrich media segments (e.g for external segment indices and for live)
    */
@@ -94,49 +123,88 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     if (!this.segmentIndexProvider) {
       return Promise.reject("No segment index provider set");
     }
+    this._lastRefreshAt = Date.now();
     return this.segmentIndexProvider()
       .then((newSegments) => {
-        Array.prototype.push.apply(this.segments, newSegments);
+        Array.prototype.push.apply(this._segments, newSegments);
         return this;
       })
   }
 
   /**
-   * Activates/enables a certain stream
+   * Activates/enables this media with the attached engine
    */
-  activate() {
+  activate(): Promise<boolean> {
     if (this.mediaEngine) {
       return this.mediaEngine.activateMediaStream(this)
     }
-    return false;
+    return Promise.reject(false);
+  }
+
+  getSeekableTimeRanges(): TimeIntervalContainer {
+    if (this._lastRefreshAt > this._lastTimeRangesCreatedAt) {
+      this._updateTimeRanges();
+    }
+    return this._timeRanges;
+  }
+
+  /**
+   *
+   * @param range
+   * @param partial
+   * @returns segments array which are fully contained inside `range` (or only overlap when `partial` is true)
+   */
+  findSegmentsForTimeRange(range: TimeInterval, partial: boolean = false): MediaSegment[] {
+    if (!partial) {
+      return this._segments.filter((segment) => range.contains(segment.getTimeInterval()));
+    } else {
+      return this._segments.filter((segment) => range.overlapsWith(segment.getTimeInterval()));
+    }
+  }
+
+  private _updateTimeRanges() {
+    this._timeRanges = new TimeIntervalContainer();
+    this._segments.forEach((segment) => {
+      this._timeRanges.add(new TimeInterval(segment.startTime, segment.endTime));
+    });
+    this._lastTimeRangesCreatedAt = Date.now();
   }
 }
 
 /**
  * A set of segmented adaptive media stream representations with a given combination of content-types (see flags).
  *
- *
+ * This might be a valid playable combination of tracks (of which some might be optional).
  */
 export class AdaptiveMediaSet extends Set<AdaptiveMedia> implements MediaContainer {
   parent: AdaptiveMediaPeriod
   mediaContainerInfo: MediaContainerInfo = new MediaContainerInfo()
+
+  /**
+   * @returns The default media if advertised,
+   * or falls back on first media representation of the first set
+   */
+  getDefaultMedia(): AdaptiveMedia {
+    return Array.from(this.values())[0];
+  }
 }
 
 /**
- * A queriable collection of adaptive media sets.
+ * A queriable collection of adaptive media sets. For example, each set might be an adaptation state.
  */
 export class AdaptiveMediaPeriod {
 
   sets: AdaptiveMediaSet[] = [];
 
   /**
-   * @returns The default media if advertised, or falls back on first media representation of the first set
+   * @returns The default adaptive-media-set if advertised,
+   * or falls back on first media representation of the first set
    */
-  getDefaultMedia(): AdaptiveMedia {
+  getDefaultSet(): AdaptiveMediaSet {
     if (this.sets[0].size === 0) {
-      throw new Error('No default media found');
+      throw new Error('No default media set found');
     }
-    return this.sets[0].values().next().value;
+    return this.sets[0];
   }
 
   getMediaListFromSet(index: number): AdaptiveMedia[] {

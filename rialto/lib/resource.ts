@@ -106,6 +106,14 @@ export class Resource extends EventEmitter {
     return this.ab_ !== null
   }
 
+  get hasRequestResponses(): boolean {
+    return this.requestResponseData_.length > 0;
+  }
+
+  get hasData(): boolean {
+    return this.hasBuffer || this.hasRequestResponses;
+  }
+
   get buffer(): ArrayBuffer {
     return this.ab_
   }

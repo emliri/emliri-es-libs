@@ -18,26 +18,20 @@ export class MediaLocator {
     return new MediaLocator(
       resolveUri(relativeUri, baseUri),
       byteRange,
-      startTime, endTime
+      startTime,
+      endTime
     )
   }
 
-  uri: string;
-  startTime: MediaClockTime;
-  endTime: MediaClockTime;
-  byteRange: ByteRange;
-
   constructor(
-    uri: string,
-    byteRange: ByteRange = null,
-    startTime: MediaClockTime = NaN,
-    endTime: MediaClockTime = NaN,
+    readonly uri: string,
+    readonly byteRange: ByteRange = null,
+    readonly startTime: MediaClockTime,
+    readonly endTime: MediaClockTime,
   ) {
-    this.uri = uri
-    this.startTime = startTime
-    this.endTime = endTime
-    this.byteRange = byteRange
-
+    if (startTime > endTime) {
+      throw new Error('Media-locator can not be created with startTime > endTime');
+    }
     // FIXME: check that we have an absolute and valid URL here
   }
 
