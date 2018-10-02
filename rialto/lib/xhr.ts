@@ -11,7 +11,7 @@ import {ByteRange} from './byte-range'
 import {getLogger} from './logger'
 import { IResourceRequest } from './resource-request';
 
-import {utf8StringToArray} from './bytes-read-write';
+import {utf8StringToArray, utf8BytesToString} from './bytes-read-write';
 
 const {
   log
@@ -118,6 +118,7 @@ export class XHR implements IResourceRequest {
    * Enables "Content-Range" request header from given `ByteRange` object in constructor
    */
   public enableContentRange: boolean = false;
+  public encodeStringsToUtf8Buffer: boolean = false;
 
   constructor(
     url: string,
@@ -273,15 +274,35 @@ export class XHR implements IResourceRequest {
     return this._responseHeadersMap
   }
 
+  get responseType(): XHRResponseType {
+    switch(this._xhr.responseType) {
+    case 'arraybuffer': return XHRResponseType.ARRAY_BUFFER;
+    case 'blob': return XHRResponseType.BLOB;
+    case 'document': return XHRResponseType.DOCUMENT;
+    case 'json': return XHRResponseType.JSON;
+    case 'text': return XHRResponseType.TEXT;
+    }
+    throw new Error('No mapping for XHR response type: ' + this._xhr.responseType);
+  }
+
   get responseData(): XHRData {
-    if (this.responseText) {
-      return utf8StringToArray(this.responseText)
+    if (this._xhr.responseType === 'text') {
+      if (this.encodeStringsToUtf8Buffer) {
+        return utf8StringToArray(this.responseText);
+      } else {
+        return this.responseText;
+      }
     }
     return this._xhr.response
   }
 
   get responseText(): string {
-    return this._xhr.responseText
+    // when the response is not text and we call on the property, native XHR crashes
+    try {
+      return this._xhr.responseText
+    } catch(ee) {
+      return null;
+    }
   }
 
   get responseDocument(): Document {
