@@ -18,6 +18,9 @@ import { ByteRange } from './byte-range';
 import { AdaptiveMediaEngine } from './adaptive-media-client';
 import { MediaClockTime } from "./media-locator";
 import { TimeIntervalContainer, TimeInterval } from "./time-intervals";
+import { getLogger } from "./logger";
+
+const { log, error } = getLogger("adaptive-media-client");
 
 /**
  * Essentially, a sequence of media segments that can be consumed as a stream.
@@ -32,6 +35,7 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
   private _timeRanges: TimeIntervalContainer = new TimeIntervalContainer();
   private _lastRefreshAt: number = 0;
   private _lastTimeRangesCreatedAt: number = 0;
+  private _updateTimer: number;
 
   constructor(public mediaEngine: AdaptiveMediaEngine = null) {
     super();
@@ -70,9 +74,6 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
   segmentIndexUri: string;
   segmentIndexRange: ByteRange;
   segmentIndexProvider: () => Promise<MediaSegment[]> = null;
-
-  getUrl(): string { return this.segmentIndexUri || null; }
-
   /**
    * If this is an alternate rendition media for example in HLS the group-ID,
    * it is what may be used to group various media together into a set
@@ -90,11 +91,23 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     return this._segments;
   }
 
+  get lastRefreshedAt(): number {
+    return this._lastRefreshAt;
+  }
+
+  getUrl(): string { return this.segmentIndexUri || null; }
+
   getEarliestTimestamp(): MediaClockTime {
     if (!this._segments.length) {
       return NaN;
     }
     return this._segments[0].startTime;
+  }
+
+  getMeanSegmentDuration(): number {
+    return this._segments.reduce((accu, segment) => {
+      return accu + segment.duration;
+    }, 0) / this._segments.length;
   }
 
   /**
@@ -112,23 +125,47 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     return this.getSeekableTimeRanges().getWindowDuration();
   }
 
-  get lastRefreshedAt(): number {
-    return this._lastRefreshAt;
-  }
-
   /**
    * Refresh/enrich media segments (e.g for external segment indices and for live)
    */
-  refresh(): Promise<AdaptiveMedia> {
+  refresh(autoReschedule: boolean = false): Promise<AdaptiveMedia> {
     if (!this.segmentIndexProvider) {
       return Promise.reject("No segment index provider set");
     }
     this._lastRefreshAt = Date.now();
+
+    const reschedule = () => {
+      this.scheduleUpdate(this.getMeanSegmentDuration(), () => {
+        reschedule();
+      })
+    }
+
+    log('going to refresh media index:', this.getUrl());
+
     return this.segmentIndexProvider()
       .then((newSegments) => {
+
+        // only call this once we have new segments so
+        // we can actually calculate average segment duration
+        // this will be called once on the initial call to refresh
+        // while scheduleUpdate doesn't set to true the autoReschedule flag
+        // but we call reschedule via the reentrant closure in the callback here.
+        if (autoReschedule) {
+          reschedule();
+        }
+
         Array.prototype.push.apply(this._segments, newSegments);
         return this;
       })
+  }
+
+  scheduleUpdate(timeSeconds: number, onRefresh: (refresh: Promise<AdaptiveMedia>) => void = null) {
+    log('scheduling update of adaptive media index in:', timeSeconds);
+    window.clearTimeout(this._updateTimer);
+    this._updateTimer = window.setTimeout(() => {
+      const refreshResult = this.refresh();
+      if (onRefresh) { onRefresh(refreshResult); }
+    }, timeSeconds * 1000);
   }
 
   /**

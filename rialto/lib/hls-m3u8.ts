@@ -175,8 +175,6 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
 export class HlsM3u8MediaPlaylist extends Resource implements ParseableResource<AdaptiveMedia> {
   private _file: HlsM3u8File;
 
-  private _playlistType: HlsM3u8MediaPlaylistType;
-
   constructor(m3u8File: HlsM3u8File) {
     // automatically resolve the inner resource if it has a base URI
     super(m3u8File.getUrl());
@@ -197,7 +195,6 @@ export class HlsM3u8MediaPlaylist extends Resource implements ParseableResource<
   parse(): Promise<AdaptiveMedia> {
     return this._file.parse()
       .then((adaptiveMediaPeriods) => {
-
         //console.log(adaptiveMediaPeriods)
 
         // We assume that the embedded file object
