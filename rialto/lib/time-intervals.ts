@@ -4,10 +4,6 @@ export type TimeIntervalProperties = {
   fetched: boolean
 };
 
-/**
- * https://en.wikipedia.org/wiki/Interval_(mathematics)
- */
-
 export class TimeInterval {
   private _props: TimeIntervalProperties = {
     seekable: true,
@@ -55,7 +51,7 @@ export class TimeInterval {
 
   /**
    *
-   * @param time a value within a time-range
+   * @param time a value to compare this interval with
    * @param strict when true, uses strict comparison (boundaries not part of interval)
    * @returns true when time values lies within interval
    */
@@ -161,7 +157,7 @@ export class TimeInterval {
     }
 
     // If both ranges don't overlap at all
-    // simply the range over the min of both starts and the max of both ends
+    // simply the range over the min of both ends as start and the max of both starts as end
     return new TimeInterval(
       Math.min(this.end, range.end),
       Math.max(this.start, range.start)

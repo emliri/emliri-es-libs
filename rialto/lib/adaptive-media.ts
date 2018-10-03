@@ -20,7 +20,7 @@ import { MediaClockTime } from "./media-locator";
 import { TimeIntervalContainer, TimeInterval } from "./time-intervals";
 import { getLogger } from "./logger";
 
-const { log, error } = getLogger("adaptive-media-client");
+const { log, error, warn } = getLogger("adaptive-media-client");
 
 /**
  * Essentially, a sequence of media segments that can be consumed as a stream.
@@ -74,6 +74,7 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
   segmentIndexUri: string;
   segmentIndexRange: ByteRange;
   segmentIndexProvider: () => Promise<MediaSegment[]> = null;
+
   /**
    * If this is an alternate rendition media for example in HLS the group-ID,
    * it is what may be used to group various media together into a set
@@ -87,12 +88,23 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
    */
   externalIndex: number;
 
+  /**
+   * tamper-safe copy of internal data
+   */
   get segments(): MediaSegment[] {
-    return this._segments;
+    return this._segments.slice(0);
   }
 
   get lastRefreshedAt(): number {
     return this._lastRefreshAt;
+  }
+
+  addSegment(mediaSegment: MediaSegment, reorderAndDedupe: boolean = true) {
+    if (reorderAndDedupe) {
+      this._updateSegments([mediaSegment]);
+    } else {
+      this._segments.push(mediaSegment);
+    }
   }
 
   getUrl(): string { return this.segmentIndexUri || null; }
@@ -134,9 +146,9 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     }
     this._lastRefreshAt = Date.now();
 
-    const reschedule = () => {
+    const doAutoReschedule = () => {
       this.scheduleUpdate(this.getMeanSegmentDuration(), () => {
-        reschedule();
+        doAutoReschedule();
       })
     }
 
@@ -145,21 +157,28 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     return this.segmentIndexProvider()
       .then((newSegments) => {
 
-        // only call this once we have new segments so
-        // we can actually calculate average segment duration
-        // this will be called once on the initial call to refresh
+        // update segment-list models
+        this._updateSegments(newSegments);
+
+        // we only call this once we have new segments so
+        // we can actually calculate average segment duration.
+        // when autoReschedule is true, this would be called once on the initial call to refresh
         // while scheduleUpdate doesn't set to true the autoReschedule flag
-        // but we call reschedule via the reentrant closure in the callback here.
+        // when it calls refresh.
+        // rescheduling happens as we call reschedule() via the reentrant closure in the callback here.
         if (autoReschedule) {
-          reschedule();
+          doAutoReschedule();
         }
 
-        Array.prototype.push.apply(this._segments, newSegments);
         return this;
       })
   }
 
   scheduleUpdate(timeSeconds: number, onRefresh: (refresh: Promise<AdaptiveMedia>) => void = null) {
+    if (!Number.isFinite(timeSeconds)) {
+      warn('attempt to schedule media update with invalid time-value:', timeSeconds)
+      return;
+    }
     log('scheduling update of adaptive media index in:', timeSeconds);
     window.clearTimeout(this._updateTimer);
     this._updateTimer = window.setTimeout(() => {
@@ -206,6 +225,74 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     });
     this._lastTimeRangesCreatedAt = Date.now();
   }
+
+  private _updateSegments(newSegments: MediaSegment[]) {
+
+    log('got new segments list of size:', newSegments.length)
+
+    Array.prototype.push.apply(this._segments, newSegments);
+
+    log('new temp list size is:', this._segments.length)
+
+    if (!this._segments.length) {
+      return;
+    }
+
+    let lastOrdinalIdx: number = -1;
+    let lastSegmentEndTime: number = -1;
+
+    log('first/last ordinal index is:', newSegments[0].getOrdinalIndex(), newSegments[newSegments.length -1].getOrdinalIndex())
+
+    const segments: MediaSegment[] = [];
+
+    // sort by ordinal index
+    this._segments.sort((a, b) => {
+      const diff = a.getOrdinalIndex() - b.getOrdinalIndex();
+      if (Number.isFinite(diff)) {
+        return diff;
+      }
+      return 0;
+    }).forEach((segment) => {
+
+      //console.log(segment.getUrl())
+
+      const index = segment.getOrdinalIndex();
+
+      // remove redundant indices
+      // if it's NaN we don't care about this (it means there are no indices)
+      if (Number.isFinite(index)
+        && index === lastOrdinalIdx) {
+        return;
+      }
+
+      // TODO: handle discontinuity-markers in segments
+
+      if (segment.startTime < lastSegmentEndTime) {
+        const offset = lastSegmentEndTime - segment.startTime;
+        log('applying offset to segment to achieve timeplane continuity:', index, offset);
+        segment.setTimeOffset(lastSegmentEndTime - segment.startTime);
+      }
+
+      if (lastOrdinalIdx !== -1 // initial case
+        && index !== lastOrdinalIdx + 1) {
+        warn("ordinal indices should grow monitonically but diff is:", index - lastOrdinalIdx);
+      }
+
+      lastOrdinalIdx = index;
+      lastSegmentEndTime = segment.endTime;
+
+      segments.push(segment);
+    })
+
+    this._segments = segments;
+
+    log('updated and reorder/deduped media segment list, new length is:', segments.length)
+    log('first/last ordinal index is:',
+      segments[0].getOrdinalIndex(), segments[segments.length -1].getOrdinalIndex())
+    log('new cummulated/window duration is:', this.getCumulatedDuration(), '/', this.getWindowDuration())
+
+  }
+
 }
 
 /**

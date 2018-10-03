@@ -37,6 +37,10 @@ export class MediaSegment extends Resource implements MediaContainer, Decryptabl
 
   private locator_: MediaLocator;
 
+  private timeOffset_: number = 0;
+
+  private ordinalIndex_: number;
+
   mediaContainerInfo: MediaContainerInfo = new MediaContainerInfo()
 
   constructor(locator: MediaLocator, mimeType: string = null, cached = false) {
@@ -58,15 +62,27 @@ export class MediaSegment extends Resource implements MediaContainer, Decryptabl
     return new TimeInterval(this.startTime, this.endTime);
   }
 
+  setTimeOffset(o: number) {
+    this.timeOffset_ = o;
+  }
+
+  getTimeOffset(): number { return this.timeOffset_; }
+
+  setOrdinalIndex(i: number) {
+    this.ordinalIndex_ = i;
+  }
+
+  getOrdinalIndex(): number { return this.ordinalIndex_; }
+
   get duration(): MediaClockTime {
     return this.endTime - this.startTime;
   }
 
   get startTime(): MediaClockTime {
-    return this.locator_.startTime
+    return this.locator_.startTime + this.timeOffset_
   }
 
   get endTime(): MediaClockTime {
-    return this.locator_.endTime
+    return this.locator_.endTime + this.timeOffset_
   }
 }
