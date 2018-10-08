@@ -1,3 +1,15 @@
+/**
+ * @author Stephan Hesse (c) Copyright 2018 <stephan@emliri.com>
+ *
+ */
+
+/**
+ * @module time-intervals Allows to deal with time-intervals/ranges and perform all sorts of operations on them
+ * including merging/concat, flattening, aggregation/duration/window-sum and comparison of all sorts.
+ *
+ * Can also digest native TimeRanges objects.
+ */
+
 export type TimeIntervalProperties = {
   seekable: boolean
   desired: boolean
@@ -34,7 +46,7 @@ export class TimeInterval {
   /**
    *
    * @param range
-   * @returns positive if `range` starts after this
+   * @returns positive if `range` starts after this starts
    */
   compareStart(range: TimeInterval): number {
     return range.start - this.start;
@@ -43,7 +55,7 @@ export class TimeInterval {
   /**
    *
    * @param range
-   * @returns positive if `range` ends after this
+   * @returns positive if `range` ends after this ends
    */
   compareEnd(range: TimeInterval): number {
     return range.end - this.end;
@@ -208,13 +220,15 @@ export class TimeIntervalContainer {
     return this._ranges;
   }
 
-  add(range: TimeInterval) {
+  add(range: TimeInterval): TimeIntervalContainer {
     this._isFlat = false;
     this._ranges.push(range);
+    return this;
   }
 
-  clear() {
+  clear(): TimeIntervalContainer  {
     this._ranges = [];
+    return this;
   }
 
   /**
@@ -223,7 +237,7 @@ export class TimeIntervalContainer {
    * grows while keeping the same necessary information for most use-cases.
    * @returns a flattened version of the time-intervals in this container
    */
-  flatten(): TimeIntervalContainer {
+  flatten(inPlace: boolean = false): TimeIntervalContainer {
     if (this._isFlat) {
       return this;
     }
@@ -248,6 +262,12 @@ export class TimeIntervalContainer {
       }
       previousRange = range; // the previous range might also be merged one (as it may overlap/touch with future ranges)
     })
+
+    if (inPlace) {
+      this._ranges = newRanges;
+      this._isFlat = true;
+      return this;
+    }
     return new TimeIntervalContainer(newRanges, true);
   }
 
@@ -269,6 +289,21 @@ export class TimeIntervalContainer {
       }
     }
 
+    return false;
+  }
+
+  /**
+   * Checks one value against all intervals in this
+   * @param value
+   */
+  hasIntervalsWith(value: number): boolean {
+    const thisFlat: TimeInterval[] = this.flatten().ranges;
+
+    for (let i=0; i < thisFlat.length; i++) {
+      if (thisFlat[i].compareInterval(value)) {
+        return true;
+      }
+    }
     return false;
   }
 
@@ -299,6 +334,7 @@ export class TimeIntervalContainer {
   }
 
   toTimeRanges(): TimeRanges {
+    // FIXME:
     throw new Error('Not implemented')
   }
 
