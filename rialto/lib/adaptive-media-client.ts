@@ -35,6 +35,7 @@ export interface AdaptiveMediaEngine {
 export class AdaptiveMediaStreamConsumer {
 
   private _fetchTargetRanges: TimeIntervalContainer = new TimeIntervalContainer();
+  private _bufferedRanges: TimeIntervalContainer = new TimeIntervalContainer();
 
   constructor(
     private _adaptiveMedia: AdaptiveMedia,
@@ -85,7 +86,14 @@ export class AdaptiveMediaStreamConsumer {
         if (segment.isFetching || segment.hasData) {
           return;
         }
-        segment.fetch();
+        segment.fetch().then(() => {
+
+          const segmentInterval = segment.getTimeInterval();
+
+          log('adding time-interval to buffered range:', segmentInterval)
+
+          this._bufferedRanges.add(segmentInterval).flatten(true);
+        })
       });
     });
   }
