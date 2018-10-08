@@ -50,6 +50,30 @@ export class AdaptiveMediaStreamConsumer {
     return this._fetchTargetRanges;
   }
 
+  setFetchTarget(time: number) {
+    this.setFetchTargetRange(new TimeInterval(0, time));
+  }
+
+  /**
+   *
+   * @param floor when passed negative number, floor is calculated from end of media (useful for live/DVR window)
+   * @param ceiling
+   */
+  setFetchFloorCeiling(floor: number = 0, ceiling: number = Infinity) {
+
+    if (floor === 0) {
+      floor = this._adaptiveMedia.getEarliestTimestamp();
+    } else if (floor < 0) {
+      floor = this._adaptiveMedia.getWindowDuration() - Math.abs(floor);
+    }
+
+    if (ceiling === Infinity) {
+      ceiling = this._adaptiveMedia.getWindowDuration(); // when to use cummulated duration?
+    }
+
+    this.setFetchTargetRange(new TimeInterval(floor, ceiling));
+  }
+
   /**
    *
    * @param range pass `null` to just reset to clear range container
@@ -82,6 +106,9 @@ export class AdaptiveMediaStreamConsumer {
   }
 
   private _fetchAllSegmentsInTargetRange() {
+
+    log('trying to retrieve data for fetch-range');
+
     const fetchTargetRanges = this.getFetchTargetRanges();
     fetchTargetRanges.ranges.forEach((range) => {
       const mediaSegments: MediaSegment[] = this._adaptiveMedia.findSegmentsForTimeRange(range, true);
@@ -90,6 +117,13 @@ export class AdaptiveMediaStreamConsumer {
         if (segment.isFetching || segment.hasData) {
           return;
         }
+
+        if (!segment.hasCustomRequestMaker()) {
+          throw new Error('Assertion failed: media segment should have custom request-maker');
+        }
+
+        log('going to request segment resource:', segment.getOrdinalIndex(), segment.getUrl())
+
         segment.fetch().then(() => {
 
           const segmentInterval = segment.getTimeInterval();

@@ -222,6 +222,10 @@ export class Resource extends EventEmitter {
     return makeDefaultRequest;
   }
 
+  hasCustomRequestMaker(): boolean {
+    return !!this.requestMaker_;
+  }
+
   getRequestResponses(): ResourceRequestResponseData[] {
     return this.requestResponseData_;
   }

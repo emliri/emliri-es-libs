@@ -141,16 +141,16 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
    * Refresh/enrich media segments (e.g for external segment indices and for live)
    */
   refresh(autoReschedule: boolean = false,
-    onSegmentsUpdate: (result: Promise<AdaptiveMedia>) => void = null): Promise<AdaptiveMedia> {
+    onSegmentsUpdate: () => void = null): Promise<AdaptiveMedia> {
     if (!this.segmentIndexProvider) {
       return Promise.reject("No segment index provider set");
     }
     this._lastRefreshAt = Date.now();
 
     const doAutoReschedule = () => {
-      this.scheduleUpdate(this.getMeanSegmentDuration(), (result) => {
+      this.scheduleUpdate(this.getMeanSegmentDuration(), () => {
         if (onSegmentsUpdate) {
-          onSegmentsUpdate(result);
+          onSegmentsUpdate();
         }
         doAutoReschedule();
       })
@@ -165,7 +165,7 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
         this._updateSegments(newSegments);
 
         if (onSegmentsUpdate) {
-          onSegmentsUpdate(Promise.resolve(this));
+          onSegmentsUpdate();
         }
 
         // we only call this once we have new segments so
@@ -182,7 +182,7 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
       });
   }
 
-  scheduleUpdate(timeSeconds: number, onRefresh: (refresh: Promise<AdaptiveMedia>) => void = null) {
+  scheduleUpdate(timeSeconds: number, onRefresh: () => void = null) {
     if (!Number.isFinite(timeSeconds)) {
       warn('attempt to schedule media update with invalid time-value:', timeSeconds)
       return;
@@ -190,8 +190,11 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     log('scheduling update of adaptive media index in:', timeSeconds);
     window.clearTimeout(this._updateTimer);
     this._updateTimer = window.setTimeout(() => {
-      const refreshResult = this.refresh();
-      if (onRefresh) { onRefresh(refreshResult); }
+      this.refresh().then((result: AdaptiveMedia) => {
+        if (onRefresh) {
+          onRefresh();
+        }
+      })
     }, timeSeconds * 1000);
   }
 

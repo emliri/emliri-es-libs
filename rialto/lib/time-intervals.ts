@@ -228,6 +228,7 @@ export class TimeIntervalContainer {
 
   clear(): TimeIntervalContainer  {
     this._ranges = [];
+    this._isFlat = false;
     return this;
   }
 
