@@ -171,6 +171,10 @@ export class Resource extends EventEmitter {
   fetch(): Promise<Resource> {
     this.fetchAttemptCnt_++
 
+    if (this.request_) {
+      throw new Error('Assertion failed: resource already has request for ongoing fetch');
+    }
+
     const fetchPromise = new Promise<Resource>((resolve, reject) => {
       this.fetchResolve_ = resolve
       this.fetchReject_ = reject
@@ -183,6 +187,7 @@ export class Resource extends EventEmitter {
 
     this.requestBytesLoaded_ = NaN;
     this.requestBytesTotal_ = NaN;
+
     this.request_ = makeRequest(url, {
       requestCallback: this.onRequestCallback_.bind(this),
       method: XHRMethod.GET,
@@ -194,6 +199,10 @@ export class Resource extends EventEmitter {
   }
 
   abort() {
+    if (!this.request_) {
+      throw new Error('Assertion failed: can`t abort, resource has no ongoing request');
+    }
+
     this.abortedCnt_++
     this.request_.abort()
   }
@@ -243,9 +252,15 @@ export class Resource extends EventEmitter {
 
     //console.log('onRequestCallback', request.xhrState, XHRState.DONE)
 
+    let reset: boolean = false;
+
+    if (request !== this.request_) {
+      throw new Error('Assertion failed: request-callback has invalid user-data reference');
+    }
+
     if (request.xhrState === XHRState.DONE) {
 
-      this.fetchLatency_ = request.secondsUntilDone
+      this.fetchLatency_ = request.secondsUntilDone;
 
       if (request.wasSuccessful()) {
         const response = new ResourceRequestResponseData(request, this)
@@ -260,12 +275,7 @@ export class Resource extends EventEmitter {
         this.emit(ResourceEvents.FETCH_SUCCEEDED_NOT);
       }
 
-      // reset fetch promise hooks
-      this.fetchReject_ = null
-      this.fetchResolve_ = null
-
-      // XHR object is done and over, let's get rid of it
-      this.request_ = null
+      reset = true;
 
     } else if (request.xhrState === XHRState.LOADING) {
       this.fetchLatency_ = request.secondsUntilLoading
@@ -276,9 +286,9 @@ export class Resource extends EventEmitter {
     }
 
     if (isProgressUpdate) {
-      this.requestBytesLoaded_ = this.request_.loadedBytes;
-      this.requestBytesTotal_ = this.request_.totalBytes;
-      this.emit(ResourceEvents.FETCH_PROGRESS, this.request_.loadedBytes, this.request_.totalBytes);
+      this.requestBytesLoaded_ = request.loadedBytes;
+      this.requestBytesTotal_ = request.totalBytes;
+      this.emit(ResourceEvents.FETCH_PROGRESS, request.loadedBytes, request.totalBytes);
     }
 
     if (request.hasBeenAborted) {
@@ -291,6 +301,14 @@ export class Resource extends EventEmitter {
       this.emit(ResourceEvents.FETCH_ERRORED)
 
       this.fetchReject_(request.error)
+    }
+
+    if (reset) {
+      // reset fetch promise hooks
+      this.fetchReject_ = null
+      this.fetchResolve_ = null
+      // XHR object is done and over, let's get rid of it
+      this.request_ = null
     }
   }
 

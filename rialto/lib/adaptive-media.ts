@@ -140,14 +140,18 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
   /**
    * Refresh/enrich media segments (e.g for external segment indices and for live)
    */
-  refresh(autoReschedule: boolean = false): Promise<AdaptiveMedia> {
+  refresh(autoReschedule: boolean = false,
+    onSegmentsUpdate: (result: Promise<AdaptiveMedia>) => void = null): Promise<AdaptiveMedia> {
     if (!this.segmentIndexProvider) {
       return Promise.reject("No segment index provider set");
     }
     this._lastRefreshAt = Date.now();
 
     const doAutoReschedule = () => {
-      this.scheduleUpdate(this.getMeanSegmentDuration(), () => {
+      this.scheduleUpdate(this.getMeanSegmentDuration(), (result) => {
+        if (onSegmentsUpdate) {
+          onSegmentsUpdate(result);
+        }
         doAutoReschedule();
       })
     }
@@ -160,6 +164,10 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
         // update segment-list models
         this._updateSegments(newSegments);
 
+        if (onSegmentsUpdate) {
+          onSegmentsUpdate(Promise.resolve(this));
+        }
+
         // we only call this once we have new segments so
         // we can actually calculate average segment duration.
         // when autoReschedule is true, this would be called once on the initial call to refresh
@@ -171,7 +179,7 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
         }
 
         return this;
-      })
+      });
   }
 
   scheduleUpdate(timeSeconds: number, onRefresh: (refresh: Promise<AdaptiveMedia>) => void = null) {
@@ -230,11 +238,29 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
 
     log('starting update of media sefgment - got new segments list of size:', newSegments.length)
 
+    // pre-deduplicate new segments by ordinal-index
+    // this is to make sure we are not throwing out any already existing
+    // resources here which may have ongoing request state for example.
+    newSegments = newSegments.filter((segment) => {
+      return this._segments.findIndex((s) => {
+        if (!Number.isFinite(segment.getOrdinalIndex())) {
+          return false;
+        }
+        return s.getOrdinalIndex() === segment.getOrdinalIndex();
+      }) < 0  // true when we didn't find any segment with that ordinal index yet
+              // which means we should let it pass the filter function to be added
+    });
+
+    if (newSegments.length === 0) {
+      log('no new segments found');
+      return;
+    }
+
     Array.prototype.push.apply(this._segments, newSegments);
 
-    log('new temp list size is:', this._segments.length)
+    log('new deduplicated list size is:', this._segments.length)
 
-    if (!this._segments.length) {
+    if (this._segments.length === 0) {
       return;
     }
 
@@ -243,7 +269,9 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     let lastOrdinalIdx: number = -1;
     let lastSegmentEndTime: number = -1;
 
-    log('first/last ordinal index is:', newSegments[0].getOrdinalIndex(), newSegments[newSegments.length -1].getOrdinalIndex())
+    log('first/last ordinal index is:',
+      newSegments[0].getOrdinalIndex(),
+      newSegments[newSegments.length -1].getOrdinalIndex())
 
     const segments: MediaSegment[] = [];
 

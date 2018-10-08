@@ -161,14 +161,8 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
 
     let segmentIndex: number = 0;
 
-    //console.log(this._m3u8ParserResult)
-
-    //console.log('index', mediaIndexOffset)
-
     this._m3u8ParserResult.segments.forEach((segment: {duration: number, timeline: number, uri: string}) => {
       const endTime = startTime + segment.duration;
-
-      //console.log(segment)
 
       const mediaSegment = new MediaSegment(
         MediaLocator.fromRelativeURI(segment.uri, this.getUrl(), null, startTime, endTime)

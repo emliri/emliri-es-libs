@@ -267,8 +267,9 @@ export class TimeIntervalContainer {
       this._ranges = newRanges;
       this._isFlat = true;
       return this;
+    } else {
+      return new TimeIntervalContainer(newRanges, true);
     }
-    return new TimeIntervalContainer(newRanges, true);
   }
 
   /**

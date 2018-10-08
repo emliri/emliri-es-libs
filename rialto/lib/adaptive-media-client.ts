@@ -42,6 +42,10 @@ export class AdaptiveMediaStreamConsumer {
     private _onSegmentBufferedCb: (segment: MediaSegment) => void) {
   }
 
+  getBufferedRanges(): TimeIntervalContainer {
+    return this._bufferedRanges;
+  }
+
   getFetchTargetRanges(): TimeIntervalContainer {
     return this._fetchTargetRanges;
   }
@@ -93,6 +97,10 @@ export class AdaptiveMediaStreamConsumer {
           log('adding time-interval to buffered range:', segmentInterval)
 
           this._bufferedRanges.add(segmentInterval).flatten(true);
+
+          if (this._onSegmentBufferedCb) {
+            this._onSegmentBufferedCb(segment);
+          }
         })
       });
     });
