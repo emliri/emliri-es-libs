@@ -50,6 +50,8 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
   audioInfo: AudioInfo
   textInfo: TextInfo
 
+  isLive: boolean = false;
+
   /**
    * Some label indentifying the logical function for the user this media selection has. HLS uses `NAME`, DASH has `role(s)`.
    *

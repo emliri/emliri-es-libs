@@ -42,6 +42,10 @@ export class AdaptiveMediaStreamConsumer {
     private _onSegmentBufferedCb: (segment: MediaSegment) => void) {
   }
 
+  getMedia(): AdaptiveMedia {
+    return this._adaptiveMedia;
+  }
+
   getBufferedRanges(): TimeIntervalContainer {
     return this._bufferedRanges;
   }

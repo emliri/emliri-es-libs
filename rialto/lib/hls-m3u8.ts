@@ -144,14 +144,15 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
     let media: AdaptiveMedia = new AdaptiveMedia();
 
     const hlsMediaPlaylist = new HlsM3u8MediaPlaylist(this);
-    const mediaSequenceIndex = this._m3u8ParserResult.mediaSequence;
 
-    let startTime: number = 0;
+    const mediaSequenceIndex = this._m3u8ParserResult.mediaSequence;
+    const isLive: boolean = !this._m3u8ParserResult.playlistType
+    || this._m3u8ParserResult.playlistType.toLowerCase() === 'live';
 
     // TODO handle discontinuities
 
-    const mediaIndexOffset: number
-      = media.externalIndex = mediaSequenceIndex;
+    media.isLive = isLive;
+    media.externalIndex = mediaSequenceIndex;
 
     media.segmentIndexProvider = () => {
       return hlsMediaPlaylist.fetch()
@@ -159,7 +160,10 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
         .then((adaptiveMedia: AdaptiveMedia) => adaptiveMedia.segments)
     }
 
+    let startTime: number = 0;
     let segmentIndex: number = 0;
+
+    //console.log(this._m3u8ParserResult)
 
     this._m3u8ParserResult.segments.forEach((segment: {duration: number, timeline: number, uri: string}) => {
       const endTime = startTime + segment.duration;
@@ -168,7 +172,7 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
         MediaLocator.fromRelativeURI(segment.uri, this.getUrl(), null, startTime, endTime)
       );
 
-      mediaSegment.setOrdinalIndex(mediaIndexOffset + segmentIndex);
+      mediaSegment.setOrdinalIndex(mediaSequenceIndex + segmentIndex);
       mediaSegment.setTimeOffset(segment.timeline);
 
       // optimization: we dont' set the reorder/dedupe flag here since we know the media is "vanilla"
