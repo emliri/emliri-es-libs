@@ -228,7 +228,7 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
 
   private _updateSegments(newSegments: MediaSegment[]) {
 
-    log('got new segments list of size:', newSegments.length)
+    log('starting update of media sefgment - got new segments list of size:', newSegments.length)
 
     Array.prototype.push.apply(this._segments, newSegments);
 
@@ -237,6 +237,8 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     if (!this._segments.length) {
       return;
     }
+
+    let startedAt: number = Date.now()
 
     let lastOrdinalIdx: number = -1;
     let lastSegmentEndTime: number = -1;
@@ -252,25 +254,24 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
         return diff;
       }
       return 0;
-    }).forEach((segment) => {
-
-      //console.log(segment.getUrl())
+    }).forEach((segment) => { // extract segments in ordinal index order and deduplicate them
 
       const index = segment.getOrdinalIndex();
 
       // remove redundant indices
       // if it's NaN we don't care about this (it means there are no indices)
       if (Number.isFinite(index)
-        && index === lastOrdinalIdx) {
+        && index === lastOrdinalIdx) { // deduplicate
         return;
       }
 
       // TODO: handle discontinuity-markers in segments
 
+      // apply offset to model continuous timeline
       if (segment.startTime < lastSegmentEndTime) {
         const offset = lastSegmentEndTime - segment.startTime;
-        log('applying offset to segment to achieve timeplane continuity:', index, offset);
-        segment.setTimeOffset(lastSegmentEndTime - segment.startTime);
+        //debug('applying offset to segment to achieve timeplane continuity:', index, offset);
+        segment.setTimeOffset(offset);
       }
 
       if (lastOrdinalIdx !== -1 // initial case
@@ -291,6 +292,7 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
       segments[0].getOrdinalIndex(), segments[segments.length -1].getOrdinalIndex())
     log('new cummulated/window duration is:', this.getCumulatedDuration(), '/', this.getWindowDuration())
 
+    log('updating segments done, processing took millis:', Date.now() - startedAt);
   }
 
 }
