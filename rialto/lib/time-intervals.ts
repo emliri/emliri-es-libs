@@ -27,6 +27,10 @@ export class TimeInterval {
     public readonly start: number,
     public readonly end: number
   ) {
+    if(!Number.isFinite(start) || !Number.isFinite(end)) {
+      throw new Error('Interval is non-finite');
+    }
+
     if (end <= start) {
       throw new Error(`Time-range must have end (${end}) strictly larger than start (${start})`);
     }
@@ -220,6 +224,10 @@ export class TimeIntervalContainer {
     return this._ranges;
   }
 
+  get size(): number {
+    return this._ranges.length;
+  }
+
   add(range: TimeInterval): TimeIntervalContainer {
     this._isFlat = false;
     this._ranges.push(range);
@@ -273,6 +281,19 @@ export class TimeIntervalContainer {
     }
   }
 
+  sort(inPlace: boolean = false): TimeIntervalContainer {
+    const newRanges: TimeInterval[] = this._ranges.sort((a, b) => {
+      return a.start - b.start;
+    })
+
+    if (inPlace) {
+      this._ranges = newRanges;
+      return this;
+    } else {
+      return new TimeIntervalContainer(newRanges);
+    }
+  }
+
   /**
    * Cross-checks every range in this container with the ranges in other containers for overlaps.
    * Early-returns as soon as the first overlap is found.
@@ -307,6 +328,13 @@ export class TimeIntervalContainer {
       }
     }
     return false;
+  }
+
+  getEarliestRange(): TimeInterval {
+    if (this._ranges.length === 0) {
+      return null;
+    }
+    return this.sort().ranges[0];
   }
 
   /**

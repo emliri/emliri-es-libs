@@ -68,7 +68,7 @@ export class AdaptiveMediaStreamConsumer {
     if (floor === 0) {
       floor = this._adaptiveMedia.getEarliestTimestamp();
     } else if (floor < 0) {
-      floor = this._adaptiveMedia.getWindowDuration() - Math.abs(floor);
+      floor = Math.max(this._adaptiveMedia.getWindowDuration() - Math.abs(floor), 0);
     }
 
     if (ceiling === Infinity) {

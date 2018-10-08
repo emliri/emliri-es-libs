@@ -109,7 +109,9 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     }
   }
 
-  getUrl(): string { return this.segmentIndexUri || null; }
+  getUrl(): string {
+    return this.segmentIndexUri || null;
+  }
 
   getEarliestTimestamp(): MediaClockTime {
     if (!this._segments.length) {
