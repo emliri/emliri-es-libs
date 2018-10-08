@@ -247,7 +247,7 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
           return false;
         }
         return s.getOrdinalIndex() === segment.getOrdinalIndex();
-      }) < 0  // true when we didn't find any segment with that ordinal index yet
+      }) < 0;  // true when we didn't find any segment with that ordinal index yet
               // which means we should let it pass the filter function to be added
     });
 
@@ -316,8 +316,10 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
     this._segments = segments;
 
     log('updated and reorder/deduped media segment list, new length is:', segments.length)
+
     log('first/last ordinal index is:',
       segments[0].getOrdinalIndex(), segments[segments.length -1].getOrdinalIndex())
+
     log('new cummulated/window duration is:', this.getCumulatedDuration(), '/', this.getWindowDuration())
 
     log('updating segments done, processing took millis:', Date.now() - startedAt);
