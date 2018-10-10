@@ -280,9 +280,15 @@ export class XHR implements IResourceRequest {
     case 'blob': return XHRResponseType.BLOB;
     case 'document': return XHRResponseType.DOCUMENT;
     case 'json': return XHRResponseType.JSON;
+    case '':
     case 'text': return XHRResponseType.TEXT;
     }
+
     throw new Error('No mapping for XHR response type: ' + this._xhr.responseType);
+    /*
+    console.error('No mapping for XHR response type: ' + this._xhr.responseType);
+    return XHRResponseType.TEXT;
+    */
   }
 
   get responseData(): XHRData {
@@ -300,7 +306,7 @@ export class XHR implements IResourceRequest {
     // when the response is not text and we call on the property, native XHR crashes
     try {
       return this._xhr.responseText
-    } catch(ee) {
+    } catch(invalidStateError) {
       return null;
     }
   }
