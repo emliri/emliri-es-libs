@@ -243,7 +243,7 @@ export class AdaptiveMedia extends CloneableScaffold<AdaptiveMedia> {
 
   private _updateSegments(newSegments: MediaSegment[]) {
 
-    log('starting update of media sefgment - got new segments list of size:', newSegments.length)
+    log('starting update of media segment - got new segments list of size:', newSegments.length)
 
     // pre-deduplicate new segments by ordinal-index
     // this is to make sure we are not throwing out any already existing
