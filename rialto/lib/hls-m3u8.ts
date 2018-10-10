@@ -147,7 +147,7 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
 
     const mediaSequenceIndex = this._m3u8ParserResult.mediaSequence;
     const isLive: boolean = !this._m3u8ParserResult.playlistType
-    || this._m3u8ParserResult.playlistType.toLowerCase() === 'live';
+      || this._m3u8ParserResult.playlistType.toLowerCase() === 'live';
 
     // TODO handle discontinuities
 
