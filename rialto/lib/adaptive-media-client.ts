@@ -132,7 +132,7 @@ export class AdaptiveMediaStreamConsumer {
 
           const segmentInterval = segment.getTimeInterval();
 
-          log('adding time-interval to buffered range:', segmentInterval)
+          log('adding time-interval to buffered range:', segmentInterval.toString())
 
           this._bufferedRanges.add(segmentInterval).flatten(true);
 

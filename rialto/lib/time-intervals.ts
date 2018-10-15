@@ -48,6 +48,13 @@ export class TimeInterval {
   }
 
   /**
+   * @override
+   */
+  toString(): string {
+    return `<${this.start}-${this.end}>(${this.duration})`;
+  }
+
+  /**
    *
    * @param range
    * @returns positive if `range` starts after this starts
