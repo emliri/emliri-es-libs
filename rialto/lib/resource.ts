@@ -168,7 +168,10 @@ export class Resource extends EventEmitter {
     this.emit(ResourceEvents.BUFFER_CLEAR)
   }
 
-  fetch(): Promise<Resource> {
+  fetch(
+    responseType: XHRResponseType = XHRResponseType.ARRAY_BUFFER,
+    method: XHRMethod = XHRMethod.GET
+    ): Promise<Resource> {
     this.fetchAttemptCnt_++
 
     if (this.request_) {
@@ -190,8 +193,8 @@ export class Resource extends EventEmitter {
 
     this.request_ = makeRequest(url, {
       requestCallback: this.onRequestCallback_.bind(this),
-      method: XHRMethod.GET,
-      responseType: XHRResponseType.ARRAY_BUFFER,
+      method,
+      responseType,
       byteRange: this.byteRange
     });
 

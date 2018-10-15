@@ -11,6 +11,7 @@ import { MediaSegment } from './media-segment';
 import { MediaLocator } from './media-locator';
 import { resolveUri } from './url';
 import { utf8BytesToString } from './bytes-read-write';
+import { XHRResponseType } from './xhr';
 
 const {
   log,
@@ -42,7 +43,6 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
     super(uri, null, baseUri);
 
     this._fileType = fileType;
-
     this._periods[0].sets.push(this._adaptiveMediaSet);
   }
 
@@ -61,6 +61,8 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
     }
 
     const text = utf8BytesToString(new Uint8Array(buf))
+
+    //console.log(text)
 
     const parser: any = new m3u8Parser.Parser();
 
@@ -190,7 +192,7 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
   }
 
   fetch(): Promise<Resource> {
-    return super.fetch().then((r: Resource) => {
+    return super.fetch(XHRResponseType.TEXT).then((r: Resource) => {
       log('data loaded')
       // reset parsed flag
       this._parsed = false;
