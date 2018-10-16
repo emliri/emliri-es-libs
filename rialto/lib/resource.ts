@@ -134,9 +134,13 @@ export class Resource extends EventEmitter {
     return this.fetchLatency_
   }
 
-  get requestedBytesLoaded(): number { return this.requestBytesLoaded_ };
+  get requestedBytesLoaded(): number {
+    return this.requestBytesLoaded_ || 0
+  };
 
-  get requestedBytesTotal(): number { return this.requestBytesTotal_ };
+  get requestedBytesTotal(): number {
+    return this.requestBytesTotal_ || 0
+  };
 
   setBaseUri(baseUri: string) {
     this.baseUri_ = baseUri;
