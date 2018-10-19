@@ -48,6 +48,22 @@ export function createWebpackConfig(options) {
     },
     module: {
       rules: [
+        /*
+        {
+          test: /\.worker\.ts$/,
+          use: [
+            {
+            loader: 'ts-loader'
+          },
+          {
+            loader: 'worker-loader',
+            options: {
+              inline: true,
+              fallback: false
+            }
+          }]
+        },
+        //*/
         {
           test: /\.tsx?$|\.js$/,
           exclude: /(node_modules|bower_components)/,
