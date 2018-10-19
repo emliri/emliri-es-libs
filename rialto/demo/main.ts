@@ -107,7 +107,9 @@ export namespace RialtoDemoApp {
     new RialtoDemoApp(videoElement)
   }
 
+  /*
   export const runMediaSegmentQueueExample = () => {
+
     const locator = new MediaLocator('v-0360p-0550k-vp9.webm')
     const badLocator = new MediaLocator('v-0360p-0550k-vp9.webm')
 
@@ -130,6 +132,7 @@ export namespace RialtoDemoApp {
 
     queue.fetchAll()
   }
+  */
 
   export const runMPDResourceExample = () => {
 
