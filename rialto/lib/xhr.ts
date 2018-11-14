@@ -102,7 +102,7 @@ export class XHR implements IResourceRequest {
   private _xhrCallback: XHRCallbackFunction
   private _xhr: XMLHttpRequest
   private _responseHeadersMap: object = null
-  private _error: Error = null
+  private _error: Error = null;
   private _state: XHRState = XHRState.UNSENT
   private _aborted: boolean = false
   private _loadedBytes: number = 0
@@ -395,7 +395,11 @@ export class XHR implements IResourceRequest {
   }
 
   private onError(event: ErrorEvent) {
-    this._error = event.error
+    if (event.error) {
+      this._error = event.error;
+    } else {
+      this._error = new Error('XHR failed for an undefined reason');
+    }
 
     this._xhrCallback(this, false)
   }
