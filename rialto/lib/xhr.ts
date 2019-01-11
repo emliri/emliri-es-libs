@@ -11,7 +11,7 @@ import {ByteRange} from './byte-range'
 import {getLogger} from './logger'
 import { IResourceRequest } from './resource-request';
 
-import {utf8StringToArray, utf8BytesToString} from './bytes-read-write';
+import {utf8StringToArray} from './bytes-read-write';
 
 const {
   log
@@ -19,10 +19,9 @@ const {
 
 const PROGRESS_UPDATES_ENABLED = true
 
-const createXHRHeadersMapFromString = function(rawHeaders: string): object {
+const createXHRHeadersMapFromString = function(rawHeaders: string): {[header: string]: string} {
   const arr = rawHeaders.trim().split(/[\r\n]+/);
-  // create an object without a prototype (a plain vanilla "dictionary")
-  const map = Object.create(null);
+  const map: {[header: string]: string} = {}
   arr.forEach(function (line) {
     const parts = line.split(': ');
     const header = parts.shift();
