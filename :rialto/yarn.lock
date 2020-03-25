@@ -14,10 +14,6 @@
   version "9.3.0"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-9.3.0.tgz#3a129cda7c4e5df2409702626892cb4b96546dd5"
 
-"@types/node@^8.0.7":
-  version "8.5.9"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.5.9.tgz#7155cfb4ae405bca4dd8df1a214c339e939109bf"
-
 "@types/strip-bom@^3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@types/strip-bom/-/strip-bom-3.0.0.tgz#14a8ec3956c2e81edb7520790aecf21c290aebd2"
@@ -156,10 +152,6 @@ ansi-styles@^3.1.0:
   dependencies:
     color-convert "^1.9.0"
 
-ansicolor@^1.1.71:
-  version "1.1.71"
-  resolved "https://registry.yarnpkg.com/ansicolor/-/ansicolor-1.1.71.tgz#38bbf97db282edb1462dcb23400112407a9486e3"
-
 ansicolors@~0.3.2:
   version "0.3.2"
   resolved "https://registry.yarnpkg.com/ansicolors/-/ansicolors-0.3.2.tgz#665597de86a9ffe3aa9bfbe6cae5c6ea426b4979"
@@ -290,12 +282,6 @@ array-unique@^0.3.2:
 arrify@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/arrify/-/arrify-1.0.1.tgz#898508da2226f380df904728456849c1501a4b0d"
-
-as-table@^1.0.31:
-  version "1.0.31"
-  resolved "https://registry.yarnpkg.com/as-table/-/as-table-1.0.31.tgz#d00180024ecbb6d1a747150df751d3716aea8166"
-  dependencies:
-    printable-characters "^1.0.37"
 
 asap@^2.0.0, asap@~2.0.5:
   version "2.0.6"
@@ -1320,12 +1306,6 @@ dashdash@^1.12.0:
   dependencies:
     assert-plus "^1.0.0"
 
-data-uri-to-buffer@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/data-uri-to-buffer/-/data-uri-to-buffer-2.0.0.tgz#0ba23671727349828c32cfafddea411908d13d23"
-  dependencies:
-    "@types/node" "^8.0.7"
-
 date-now@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/date-now/-/date-now-0.1.4.tgz#eaf439fd4d4848ad74e5cc7dbef200672b9e345b"
@@ -1511,6 +1491,10 @@ dom-serializer@0:
   dependencies:
     domelementtype "~1.1.1"
     entities "~1.1.1"
+
+dom-walk@^0.1.0:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/dom-walk/-/dom-walk-0.1.1.tgz#672226dc74c8f799ad35307df936aba11acd6018"
 
 domain-browser@^1.1.1:
   version "1.1.7"
@@ -2268,13 +2252,6 @@ get-func-name@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/get-func-name/-/get-func-name-2.0.0.tgz#ead774abee72e20409433a066366023dd6887a41"
 
-get-source@^1.0.24:
-  version "1.0.24"
-  resolved "https://registry.yarnpkg.com/get-source/-/get-source-1.0.24.tgz#898dcc7b5592adba02e8bb82b8d2cda60cdae5c5"
-  dependencies:
-    data-uri-to-buffer "^2.0.0"
-    source-map "^0.6.0"
-
 get-stdin@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/get-stdin/-/get-stdin-4.0.1.tgz#b968c6b0a04384324902e8bf1a5df32579a450fe"
@@ -2340,6 +2317,13 @@ glob@^7.0.0, glob@^7.0.3, glob@^7.0.5, glob@^7.0.6, glob@^7.1.1, glob@^7.1.2, gl
   dependencies:
     inherits "2"
     minimatch "0.3"
+
+global@^4.3.2:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/global/-/global-4.4.0.tgz#3e7b105179006a323ed71aafca3e9c57a5cc6406"
+  dependencies:
+    min-document "^2.19.0"
+    process "^0.11.10"
 
 globals@^11.0.1:
   version "11.1.0"
@@ -3440,6 +3424,12 @@ lru-cache@^4.0.1, lru-cache@^4.1.1:
     pseudomap "^1.0.2"
     yallist "^2.1.2"
 
+m3u8-parser@^4.2.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/m3u8-parser/-/m3u8-parser-4.4.0.tgz#adf606c0af6d97f6750095a42006c2ae03dde177"
+  dependencies:
+    global "^4.3.2"
+
 macaddress@^0.2.8:
   version "0.2.8"
   resolved "https://registry.yarnpkg.com/macaddress/-/macaddress-0.2.8.tgz#5904dc537c39ec6dbefeae902327135fa8511f12"
@@ -3591,6 +3581,12 @@ mime@^1.5.0:
 mimic-fn@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/mimic-fn/-/mimic-fn-1.1.0.tgz#e667783d92e89dbd342818b5230b9d62a672ad18"
+
+min-document@^2.19.0:
+  version "2.19.0"
+  resolved "https://registry.yarnpkg.com/min-document/-/min-document-2.19.0.tgz#7bd282e3f5842ed295bb748cdd9f1ffa2c824685"
+  dependencies:
+    dom-walk "^0.1.0"
 
 minimalistic-assert@^1.0.0:
   version "1.0.0"
@@ -4038,17 +4034,6 @@ obuf@^1.0.0, obuf@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/obuf/-/obuf-1.1.1.tgz#104124b6c602c6796881a042541d36db43a5264e"
 
-ololog@^1.1.84:
-  version "1.1.84"
-  resolved "https://registry.yarnpkg.com/ololog/-/ololog-1.1.84.tgz#dfb4d458ff1c1827d140e3d3d3e64ec82b4a3f7f"
-  dependencies:
-    ansicolor "^1.1.71"
-    pipez "^1.1.8"
-    printable-characters "^1.0.38"
-    stacktracey "^1.2.96"
-    string.bullet "^1.0.11"
-    string.ify "^1.0.43"
-
 on-finished@~2.3.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/on-finished/-/on-finished-2.3.0.tgz#20f1336481b083cd75337992a16971aa2d906947"
@@ -4325,10 +4310,6 @@ pinkie-promise@^2.0.0:
 pinkie@^2.0.0:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/pinkie/-/pinkie-2.0.4.tgz#72556b80cfa0d48a974e80e77248e80ed4f7f870"
-
-pipez@^1.1.8:
-  version "1.1.9"
-  resolved "https://registry.yarnpkg.com/pipez/-/pipez-1.1.9.tgz#c6943450503b912ba651abef37e1f99157ebdb79"
 
 pkg-dir@^2.0.0:
   version "2.0.0"
@@ -4640,10 +4621,6 @@ preserve@^0.2.0:
 prettier@^1.7.0:
   version "1.10.2"
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.10.2.tgz#1af8356d1842276a99a5b5529c82dd9e9ad3cc93"
-
-printable-characters@^1.0.26, printable-characters@^1.0.28, printable-characters@^1.0.37, printable-characters@^1.0.38:
-  version "1.0.38"
-  resolved "https://registry.yarnpkg.com/printable-characters/-/printable-characters-1.0.38.tgz#76ef84accfd7f8366fb7138fb92466a916d599bc"
 
 private@~0.1.5:
   version "0.1.8"
@@ -5616,13 +5593,6 @@ sshpk@^1.7.0:
     jsbn "~0.1.0"
     tweetnacl "~0.14.0"
 
-stacktracey@^1.2.96:
-  version "1.2.100"
-  resolved "https://registry.yarnpkg.com/stacktracey/-/stacktracey-1.2.100.tgz#9e32c7a7fa643eaf69a8f9572361339a8afb6b59"
-  dependencies:
-    as-table "^1.0.31"
-    get-source "^1.0.24"
-
 state-toggle@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/state-toggle/-/state-toggle-1.0.0.tgz#d20f9a616bb4f0c3b98b91922d25b640aa2bc425"
@@ -5696,19 +5666,6 @@ string-width@^2.0.0, string-width@^2.1.0, string-width@^2.1.1:
     is-fullwidth-code-point "^2.0.0"
     strip-ansi "^4.0.0"
 
-string.bullet@^1.0.11:
-  version "1.0.11"
-  resolved "https://registry.yarnpkg.com/string.bullet/-/string.bullet-1.0.11.tgz#83d00dc0121fdcc558cf68d77fb91468923a82ae"
-  dependencies:
-    printable-characters "^1.0.26"
-
-string.ify@^1.0.43:
-  version "1.0.43"
-  resolved "https://registry.yarnpkg.com/string.ify/-/string.ify-1.0.43.tgz#dfb0e8fe73c21c23adf7d675c574ba7464f0cc80"
-  dependencies:
-    printable-characters "^1.0.28"
-    string.bullet "^1.0.11"
-
 string.prototype.padend@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/string.prototype.padend/-/string.prototype.padend-3.0.0.tgz#f3aaef7c1719f170c5eab1c32bf780d96e21f2f0"
@@ -5728,8 +5685,8 @@ string_decoder@~0.10.x:
   resolved "https://registry.yarnpkg.com/string_decoder/-/string_decoder-0.10.31.tgz#62e203bc41766c6c28c9fc84301dab1c5310fa94"
 
 stringstream@~0.0.4, stringstream@~0.0.5:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/stringstream/-/stringstream-0.0.5.tgz#4e484cd4de5a0bbbee18e46307710a8a81621878"
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/stringstream/-/stringstream-0.0.6.tgz#7880225b0d4ad10e30927d167a1d6f2fd3b33a72"
 
 strip-ansi@^3.0.0, strip-ansi@^3.0.1, strip-ansi@~3.0.1:
   version "3.0.1"
