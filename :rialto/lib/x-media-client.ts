@@ -1,5 +1,6 @@
-import { AdaptiveMediaClient, AdaptiveMediaStreamConsumer } from "./adaptive-media-client";
+import { AdaptiveMediaClient } from "./adaptive-media-client";
 import { AdaptiveMedia, AdaptiveMediaSet, AdaptiveMediaPeriod } from "./adaptive-media";
+import { AdaptiveMediaStreamConsumer } from "./adaptive-stream-consumer";
 
 import { Scheduler } from '../../:objec-ts/lib/scheduler';
 import { HlsM3u8File } from "./hls-m3u8";
@@ -46,6 +47,7 @@ export class XMediaClient extends AdaptiveMediaClient {
 
           const consumer: AdaptiveMediaStreamConsumer =
             new AdaptiveMediaStreamConsumer(media, (segment: MediaSegment) => {
+
               this._onSegmentBuffered(segment);
             });
 

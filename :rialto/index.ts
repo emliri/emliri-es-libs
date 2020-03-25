@@ -16,6 +16,7 @@ import {MediaSegmentQueue} from './lib/media-segment-queue'
 import {MpegDashMpd} from './lib/mpeg-dash-mpd'
 
 import {HlsM3u8File} from './lib/hls-m3u8';
+import { HlsLoader } from './lib/hls-loader'
 
 import {XMediaClient} from './lib/x-media-client';
 
@@ -39,6 +40,7 @@ export {
   MediaSegment,
   MediaSegmentQueue,
   MpegDashMpd,
+  HlsLoader,
   HlsM3u8File,
   XMediaClient,
 }
