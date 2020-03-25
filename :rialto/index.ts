@@ -21,7 +21,7 @@ import {XMediaClient} from './lib/x-media-client';
 
 import {Logger, getLogger} from './lib/logger'
 
-import {Observable} from '../objec-ts/index'
+import {Observable} from '../:objec-ts/index'
 
 export {
   Logger,

@@ -1,7 +1,7 @@
 import { AdaptiveMediaClient, AdaptiveMediaStreamConsumer } from "./adaptive-media-client";
 import { AdaptiveMedia, AdaptiveMediaSet, AdaptiveMediaPeriod } from "./adaptive-media";
 
-import { Scheduler } from '../../objec-ts/lib/scheduler';
+import { Scheduler } from '../../:objec-ts/lib/scheduler';
 import { HlsM3u8File } from "./hls-m3u8";
 import { MediaSourceController } from "./media-source-controller";
 

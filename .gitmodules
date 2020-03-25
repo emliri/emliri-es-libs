@@ -1,9 +1,9 @@
 [submodule "multimedia.js"]
-	path = multimedia.js
+	path = +multimedia-js
 	url = git@github.com:tchakabam/multimedia.js.git
 [submodule "greenstream"]
-	path = greenstream
+	path = +greenstream
 	url = git@github.com:tchakabam/greenstream.git
 [submodule "modular"]
-	path = modular
+	path = +modular
 	url = git@github.com:tchakabam/modular.git
