@@ -1,6 +1,6 @@
 import { CloneableScaffold } from "./cloneable";
 
-import {Set} from "../../objec-ts/lib/es6-set";
+import {Set} from "../../:objec-ts/lib/es6-set";
 
 import {MediaSegment} from './media-segment'
 
