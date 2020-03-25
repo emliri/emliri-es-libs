@@ -5,7 +5,7 @@ export class ByteRange {
     total: number;
 
     /**
-     * Assumes input like `"0-99"`
+     * Assumes input in the form `"0-99"`
      * @param rawByteRange
      */
     static fromString(rawByteRange: string) {
@@ -16,10 +16,34 @@ export class ByteRange {
       return new ByteRange(parsedRawBr[0], parsedRawBr[1])
     }
 
-    constructor(from: number = 0, to: number, total: number = NaN) {
+    constructor(from: number, to: number, total: number = NaN) {
       this.from = from
       this.to = to
       this.total = total
+
+      if (this.length <= 0) {
+        throw new Error('Negative or zero byte-length range: ' + this.length);
+      }
+
+      if (total !== NaN && this.to > this.total) {
+        throw new Error('Range end exceeds total bytes set: ' + this.to);
+      }
+    }
+
+    get length() {
+      return this.to - this.from;
+    }
+
+    split(parts: number = 2): ByteRange[] {
+      const partSize = Math.floor(this.length / parts);
+      const remainderSize = this.length % partSize;
+      const newRanges: ByteRange[] = []
+      for (let i = 0; i < parts; i++) {
+        const from = this.from + (i * partSize);
+        const to = from + partSize + ((i === parts - 1) ? remainderSize : 0);
+        newRanges.push(new ByteRange(from, to));
+      }
+      return newRanges;
     }
 
     toHttpHeaderValue(contentRange: boolean = false): string {

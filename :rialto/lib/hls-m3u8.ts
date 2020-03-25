@@ -1,8 +1,6 @@
 import * as m3u8Parser from 'm3u8-parser';
 
-import {Resource, ResourceEvents, ParseableResource} from './resource'
-
-import {ByteRange} from './byte-range'
+import {Resource, ParseableResource} from './resource'
 
 import {AdaptiveMediaPeriod, AdaptiveMediaSet, AdaptiveMedia} from './adaptive-media'
 

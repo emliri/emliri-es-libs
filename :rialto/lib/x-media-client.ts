@@ -1,5 +1,6 @@
-import { AdaptiveMediaClient, AdaptiveMediaStreamConsumer } from "./adaptive-media-client";
+import { AdaptiveMediaClient } from "./adaptive-media-client";
 import { AdaptiveMedia, AdaptiveMediaSet, AdaptiveMediaPeriod } from "./adaptive-media";
+import { AdaptiveMediaStreamConsumer } from "./adaptive-stream-consumer";
 
 import { Scheduler } from '../../:objec-ts/lib/scheduler';
 import { HlsM3u8File } from "./hls-m3u8";
@@ -8,6 +9,7 @@ import { MediaSourceController } from "./media-source-controller";
 import { getLogger } from './logger';
 import { MediaSegment } from "./media-segment";
 
+
 const { log } = getLogger("x-media-client");
 
 const SCHEDULER_FRAMERATE: number = 1;
@@ -15,9 +17,7 @@ const SCHEDULER_FRAMERATE: number = 1;
 export class XMediaClient extends AdaptiveMediaClient {
 
   scheduler: Scheduler = new Scheduler(SCHEDULER_FRAMERATE);
-
   streams: AdaptiveMediaStreamConsumer[] = [];
-
   mediaSourceController: MediaSourceController;
   mediaSource: MediaSource;
 

@@ -142,6 +142,10 @@ export class Resource extends EventEmitter {
     return this.requestBytesTotal_ || 0
   };
 
+  getRecordedTransmissionRateBps(): number {
+    return 8 * this.requestBytesLoaded_ / this.fetchLatency_;
+  }
+
   setBaseUri(baseUri: string) {
     this.baseUri_ = baseUri;
   }

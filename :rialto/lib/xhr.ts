@@ -11,7 +11,7 @@ import {ByteRange} from './byte-range'
 import {getLogger} from './logger'
 import { IResourceRequest } from './resource-request';
 
-import {utf8StringToArray, utf8BytesToString} from './bytes-read-write';
+import {utf8StringToArray} from './bytes-read-write';
 
 const {
   log
@@ -19,10 +19,9 @@ const {
 
 const PROGRESS_UPDATES_ENABLED = true
 
-const createXHRHeadersMapFromString = function(rawHeaders: string): object {
+const createXHRHeadersMapFromString = function(rawHeaders: string): {[header: string]: string} {
   const arr = rawHeaders.trim().split(/[\r\n]+/);
-  // create an object without a prototype (a plain vanilla "dictionary")
-  const map = Object.create(null);
+  const map: {[header: string]: string} = {}
   arr.forEach(function (line) {
     const parts = line.split(': ');
     const header = parts.shift();
@@ -90,6 +89,11 @@ export type XHRCallbackFunction = (xhr: XHR, isProgressUpdate: boolean) => void
  *
  * Check the values from within your callback.
  *
+ * A promise returned by the `whenDone` property can be used to attach and chain custom
+ * handlers for success and failure instead of the single callback.
+ *
+ * For more specific handling, the state can be checked upon invocation of the respective callbacks/handlers.
+ *
  * Same goes for response headers and body data, or eventual errors or abortion flags.
  *
  * The object is not recycleable (lives only for one single request, does not care about retrying and such).
@@ -99,10 +103,31 @@ export type XHRCallbackFunction = (xhr: XHR, isProgressUpdate: boolean) => void
  */
 export class XHR implements IResourceRequest {
 
+  static forJsonPost(
+    url: string,
+    payload: any,
+    xhrCallback?: XHRCallbackFunction,
+    responseType: XHRResponseType = XHRResponseType.TEXT): XHR {
+
+    return new XHR(
+      url,
+      xhrCallback,
+      XHRMethod.POST,
+      responseType,
+      null,
+      [["Content-Type", "application/json;charset=UTF-8"]],
+      JSON.stringify(payload)
+    )
+  }
+
+  private _whenDone: Promise<void> = null;
+  private _whenDoneResolve: () => void;
+  private _whenDoneReject: (err: any) => void;
+
   private _xhrCallback: XHRCallbackFunction
   private _xhr: XMLHttpRequest
   private _responseHeadersMap: object = null
-  private _error: Error = null
+  private _error: Error = null;
   private _state: XHRState = XHRState.UNSENT
   private _aborted: boolean = false
   private _loadedBytes: number = 0
@@ -133,10 +158,14 @@ export class XHR implements IResourceRequest {
     forceXMLMimeType: boolean = false
   ) {
 
-    this._createdAt = new Date()
-    this._xhrCallback = xhrCallback
+    this._createdAt = new Date();
+    this._xhrCallback = xhrCallback;
+    this._whenDone = new Promise<void>((resolve, reject) => {
+      this._whenDoneResolve = resolve;
+      this._whenDoneReject = reject;
+    });
 
-    const xhr = this._xhr = new XMLHttpRequest()
+    const xhr = this._xhr = new XMLHttpRequest();
 
     xhr.open(method, url, true);
     xhr.responseType = responseType;
@@ -172,10 +201,11 @@ export class XHR implements IResourceRequest {
     }
 
     xhr.send(data)
+
   }
 
-  setProgressUpdatesEnabled(enabled: boolean) {
-    this._progressUpdatesEnabled = enabled
+  get whenReady(): Promise<void> {
+    return this._whenDone;
   }
 
   get isInfo(): boolean {
@@ -214,28 +244,6 @@ export class XHR implements IResourceRequest {
 
   get isVoidStatus(): boolean {
     return this._xhr.status === 0
-  }
-
-  getStatusCategory(): XHRStatusCategory {
-    if (this.isInfo) {
-      return XHRStatusCategory.INFO
-    }
-    if (this.isSuccess) {
-      return XHRStatusCategory.SUCCESS
-    }
-    if (this.isRedirect) {
-      return XHRStatusCategory.REDIRECT
-    }
-    if (this.isRequestError) {
-      return XHRStatusCategory.REQUEST_ERROR
-    }
-    if (this.isServerError) {
-      return XHRStatusCategory.SERVER_ERROR
-    }
-    if (this.isCustomServerError) {
-      return XHRStatusCategory.SERVER_ERROR
-    }
-    return XHRStatusCategory.VOID
   }
 
   get error(): Error {
@@ -354,6 +362,10 @@ export class XHR implements IResourceRequest {
     return this._loadedBytes / this._totalBytes
   }
 
+  setProgressUpdatesEnabled(enabled: boolean) {
+    this._progressUpdatesEnabled = enabled
+  }
+
   getSecondsSinceCreated() {
     return (new Date().getTime() - this._createdAt.getTime()) / 1000
   }
@@ -363,7 +375,33 @@ export class XHR implements IResourceRequest {
   }
 
   wasSuccessful(): boolean {
-    return this.getStatusCategory() === XHRStatusCategory.SUCCESS;
+    return (this.getStatusCategory() === XHRStatusCategory.SUCCESS);
+  }
+
+  wasFailure(): boolean {
+    return (this.hasErrored || this.isRequestError || this.isServerError);
+  }
+
+  getStatusCategory(): XHRStatusCategory {
+    if (this.isInfo) {
+      return XHRStatusCategory.INFO
+    }
+    if (this.isSuccess) {
+      return XHRStatusCategory.SUCCESS
+    }
+    if (this.isRedirect) {
+      return XHRStatusCategory.REDIRECT
+    }
+    if (this.isRequestError) {
+      return XHRStatusCategory.REQUEST_ERROR
+    }
+    if (this.isServerError) {
+      return XHRStatusCategory.SERVER_ERROR
+    }
+    if (this.isCustomServerError) {
+      return XHRStatusCategory.SERVER_ERROR
+    }
+    return XHRStatusCategory.VOID
   }
 
   private onReadyStateChange() {
@@ -391,17 +429,31 @@ export class XHR implements IResourceRequest {
       break;
     }
 
+    if (this.wasSuccessful()) {
+      this._whenDoneResolve();
+    } else if (this.wasFailure()) {
+      this._whenDoneReject(this.status);
+    }
+
     this._xhrCallback(this, false)
   }
 
   private onError(event: ErrorEvent) {
-    this._error = event.error
+    if (event.error) {
+      this._error = event.error;
+    } else {
+      this._error = new Error('XHR failed for an undefined reason');
+    }
+
+    this._whenDoneReject(this._error);
 
     this._xhrCallback(this, false)
   }
 
   private onAbort(event: Event) {
     this._aborted = true
+
+    this._whenDoneReject(this._error);
 
     this._xhrCallback(this, false)
   }
