@@ -64,7 +64,7 @@ export class HlsM3u8File extends Resource implements ParseableResource<AdaptiveM
 
     //console.log(text)
 
-    const parser: any = new m3u8Parser.Parser();
+    const parser: any = new (<() => void> m3u8Parser.Parser)();
 
     parser.push(text);
     parser.end();
