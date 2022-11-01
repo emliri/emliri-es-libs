@@ -33,7 +33,7 @@
     "eslint-plugin-markdown": "^1.0.0-beta.6",
     "eslint-plugin-typescript": "^0.8.1",
     "html-loader": "^0.5.5",
-    "htmlhint": "^0.9.13",
+    "htmlhint": "^1.1.4",
     "jasmine": "^2.8.0",
     "jasmine-ts": "^0.2.1",
     "ts-loader": "^3.2.0",
